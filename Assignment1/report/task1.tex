@@ -1,0 +1,30 @@
+\section{Task 1}
+Using List-Homomorphism promotions listed below (from \cite[Slide 40]{l1intro})
+prove the following invariant:
+\begin{verbatim}
+(reduce myop e) . (map f)
+          ==
+(reduce myop e) . (map ( (reduce myop e) . (map f) ) ) . distr_p
+\end{verbatim}
+
+\noindent The promotions are as follows:
+\todo{Fix the look of these things. They're disgusting.}
+\begin{enumerate*}
+  \item $(\text{map} f) . (\text{map} g) \equiv \text{map}(f . g)$
+  \item $(\text{map} f ) . (\text{reduce} (++) []) \equiv (\text{reduce} (++) []) . (\text{map} (\text{map} f ))$
+  \item $(\text{reduce} \odot e_\odot) . (\text{reduce} (++) []) \equiv (\text{reduce} \odot e_\odot) . (\text{map} (\text{reduce} \odot e_\odot))$
+\end{enumerate*}
+
+\begin{verbatim}
+(reduce myop e) . (map f)
+
+(reduce myop e) . (map f)               . (reduce (++) []) . distr_p # From assignment tip
+
+(reduce myop e) . (reduce (++) [])      . (map (map f))    . distr_p # By 2
+
+(reduce myop e) . (map (reduce myop e)) . (map (map f))    . distr_p # By 3
+
+(reduce myop e) . (map ((reduce myop e) . (map f)) )       . distr_p # By 1
+
+(reduce myop e) . (map ((reduce myop e) . (map f)) )       . distr_p
+\end{verbatim}
