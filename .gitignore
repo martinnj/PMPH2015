@@ -28,9 +28,9 @@
 *.app
 
 # TeX
-.aux
-.pdf
-.toc
-.log
-.fls
-.fdb_latexmk
+*.aux
+*.pdf
+*.toc
+*.log
+*.fls
+*.fdb_latexmk
