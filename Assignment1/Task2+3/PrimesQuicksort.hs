@@ -203,13 +203,28 @@ flatQuicksort ne sizes arr =
 ---                                               ---
 --- IF YOU GET IT RIGHT flatQuicksort should WORK!---
 -----------------------------------------------------
+
+
+splitter :: [Int] -> [a] -> [[a]]
+splitter [l] xs = let
+    (l1, l2) = splitAt l xs
+    in [l1]
+splitter (l:ls) xs = let
+    (l1, l2) = splitAt l xs
+    in l1 : (splitter ls l2)
+
 segmSpecialFilter :: (a->Bool) -> [Int] -> [a] -> ([Int],[a])
-segmSpecialFilter cond sizes arr =
-    ------------------------------------------------
-    --- Implementation is Bogus, write your own! ---
-    ------------------------------------------------
-    if null arr then (sizes,arr) else
-    (replicate (length arr) 1, replicate (length arr) (head arr))
+segmSpecialFilter cond sizes arr = let
+    segLengths = filter (\x -> x /= 0) sizes
+    segments = splitter segLengths arr
+    (resArr, resSizes) = unzip $ map (parFilter cond) segments -- return is on form [([a],[Int-flags])]
+    res1 = reduce (++) [] resArr
+    res2 = reduce (++) [] resSizes
+    in (res2,res1)
+
+-- split input list up as the sizes list dictate
+-- map parFilter to each segment using cond as a function.
+-- concat the flags for each segment and the data for each segment.
 
 -----------------------------------------------------
 --- ASSIGNMENT 1: implement sparse matrix-vector  ---
@@ -282,6 +297,7 @@ flatSparseMatVctMult flags mat x =
 main :: IO()
 main = do args <- getArgs
           let inp  = if null args then [8,14,0,12,4,10,6,2] else read (head args)
+              inpL = length inp
               sizes= [2,0,1,4,0,0,0,1]
               pinp = permute [7, 6, 5, 4, 3, 2, 1, 0] inp
               vals :: [Int]
@@ -311,7 +327,7 @@ main = do args <- getArgs
           putStrLn ("PrimesFlat 49: " ++ show (primesFlat 49))
           putStrLn ("PrimesFlat 9: " ++ show (primesFlat 9))
           putStrLn ("NestQuicksort inp: " ++ show (nestedQuicksort inp))
-          putStrLn ("FlatQuicksort inp: " ++ show (flatQuicksort 0 (8:(replicate 7 0)) inp))
+          putStrLn ("FlatQuicksort inp: " ++ show (flatQuicksort 0 (inpL:(replicate (inpL-1) 0)) inp))
 
           putStrLn ("Nested SparseMatrixMult: " ++ show (nestSparseMatVctMult matrix_nest x_vector))
           putStrLn ("Flat   SparseMatrixMult: " ++ show (flatSparseMatVctMult matrix_flag matrix_flat x_vector))
