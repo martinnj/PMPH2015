@@ -52,11 +52,11 @@ elss p xs =
               (lssy, lisy, lcsy, tly, firsty, lasty, oky) =
           (newlss, newlis, newlcs, tlx+tly, firstx, lasty, newok)
                 where
-                  --connect = False -- ... fill in the blanks (rewrite this line)
-                  newlss  = 0     -- ... fill in the blanks (rewrite this line)
-                  newlis  = 0     -- ... fill in the blanks (rewrite this line)
-                  newlcs  = 0     -- ... fill in the blanks (rewrite this line)
-                  newok   = False -- ... fill in the blanks (rewrite this line)
+                  connect = p [lastx,firsty] -- Does the end of the partitions satisfy when concatted?
+                  newlss  = lssx `max` lssy `max` (if connect then lcsx+lisy else 0)     -- ... fill in the blanks (rewrite this line)
+                  newlis  = lisx `max` (if connect then (tlx+lisy) else 0) -- Longest initial segment
+                  newlcs  = lcsy `max` (if connect then (tly+lcsx) else 0) -- Longest concluding segment
+                  newok   = okx && oky -- ... fill in the blanks (rewrite this line) -- Does the entire list satisfy p?
         f x = (xmatch, xmatch, xmatch, 1, x, x, p [x])
                   where xmatch = if (p [x]) then 1 else 0
     in ((reduce lssop (0,0,0,0,0,0,True)) . (map f)) xs
