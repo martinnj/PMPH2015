@@ -73,7 +73,7 @@ unsigned long int cpuCalculation(unsigned int array_length, float* h_in, float* 
   gettimeofday(&t_start, NULL);
 
   // Perform serial calculations
-  for (unsigned int i=0 ; i < array_length ; ++i) {
+  for (unsigned int i=0 ; i < array_length ; i++) {
       float x = h_in[i];
       h_out[i] = powf((x/(x-2.3)),3.0);
   }
@@ -87,7 +87,7 @@ unsigned long int cpuCalculation(unsigned int array_length, float* h_in, float* 
 }
 
 bool areSame(float* h_in, float* cpu_arr, float* cuda_arr, unsigned int array_length) {
-  for(unsigned int i = 0 ; i < array_length ; ++i) {
+  for(unsigned int i = 0 ; i < array_length ; i++) {
     if(!(std::abs(cpu_arr[i] - cuda_arr[i]) < std::numeric_limits<float>::epsilon())) {
       printf("INVALID:\nInput: %f\nCPU: %.15f\nGPU: %.15f\n", h_in[i], cpu_arr[i], cuda_arr[i]);
       return false;
