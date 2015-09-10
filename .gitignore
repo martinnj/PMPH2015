@@ -29,8 +29,9 @@
 
 # TeX
 *.aux
-*.pdf
-*.toc
-*.log
-*.fls
+*.bbl
+*.blg
 *.fdb_latexmk
+*.fls
+*.log
+*.toc
