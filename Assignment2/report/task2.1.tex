@@ -1,1 +1,25 @@
 \section{Task II.1: Pipelining}
+
+Assuming a 5-stage pipeline design as described in \cite{l3InOrder} and given
+the program in Figure \ref{fig:t21code} 5 questions (a-e) need to be answered.
+
+\begin{figure}[ht]
+    \begin{lstlisting}[language={[x86masm]Assembler}]
+SEARCH:     LW R5, 0(R3)        /I1 Load item
+            SUB R6, R5, R2      /I2 compare with key
+            BNEZ R6, NOMATCH    /I3 check for match
+            ADDI R1, R1, #1     /I4 count matches
+NOMATCH:    ADDI R3, R3, #4     /I5 next item
+            BNE R4, R3, SEARCH  /I6 continue until all items
+    \end{lstlisting}
+    \caption{Code given in the assignment text.}
+    \label{fig:t21code}
+\end{figure}
+
+\subsection{a) Inserting NOOPS}
+
+
+\subsection{b)}
+\subsection{c)}
+\subsection{d)}
+\subsection{e)}
