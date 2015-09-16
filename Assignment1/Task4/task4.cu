@@ -15,7 +15,7 @@ __global__ void assignmentKernel(float* d_in, float* d_out, int threads_num) {
   const unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
   if(tid < threads_num) {
     float x = d_in[tid];
-    d_out[tid] = powf((x/(x-2.3)),3.0);
+    d_out[tid] = pow((x/(x-2.3)),3.0);
   }
 }
 
@@ -75,7 +75,7 @@ unsigned long int cpuCalculation(unsigned int array_length, float* h_in, float* 
   // Perform serial calculations
   for (unsigned int i=0 ; i < array_length ; i++) {
       float x = h_in[i];
-      h_out[i] = powf((x/(x-2.3)),3.0);
+      h_out[i] = pow((x/(x-2.3)),3.0);
   }
 
   // End timing the CPU run,

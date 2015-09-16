@@ -8,11 +8,10 @@ prove the following invariant:
 \end{verbatim}
 
 \noindent The promotions are as follows:
-\todo{Fix the look of these things. They're disgusting.}
 \begin{enumerate*}
-  \item $(\text{map} f) . (\text{map} g) \equiv \text{map}(f . g)$
-  \item $(\text{map} f ) . (\text{reduce} (++) []) \equiv (\text{reduce} (++) []) . (\text{map} (\text{map} f ))$
-  \item $(\text{reduce} \odot e_\odot) . (\text{reduce} (++) []) \equiv (\text{reduce} \odot e_\odot) . (\text{map} (\text{reduce} \odot e_\odot))$
+  \item (map $f$) . (map $g$) $\equiv$ map($f$ . $g$)
+  \item (map $f$) . (reduce (++) []) $\equiv$ (reduce (++) []) . (map (map $f$))
+  \item (reduce $\odot$ $e_\odot$) . (reduce (++) []) $\equiv$ (reduce $\odot$ $e_\odot$) . (map (reduce $\odot$ $e_\odot$))
 \end{enumerate*}
 
 \begin{verbatim}
@@ -25,6 +24,7 @@ prove the following invariant:
 (reduce myop e) . (map (reduce myop e)) . (map (map f))    . distr_p # By 3
 
 (reduce myop e) . (map ((reduce myop e) . (map f)) )       . distr_p # By 1
-
-(reduce myop e) . (map ((reduce myop e) . (map f)) )       . distr_p
 \end{verbatim}
+
+\noindent The last line is the form that we wished to create and we have proven
+that the invariant holds.

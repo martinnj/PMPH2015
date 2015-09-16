@@ -1,1 +1,45 @@
 \section{Task 2}
+
+For this task I had to finish the implementation of a function for calculating
+the ``Longest Satisfying Segment''. The code written for the solution can be
+senn in Figure \ref{fig:t2code}. The part I finished is path of the LLS
+operator. It takes information about two adjoining segments and creates
+information about the segment resulting from joining the segments together.
+
+\begin{figure}[ht]
+    \begin{lstlisting}
+    connect = p [lastx,firsty]
+    newlss  = lssx `max` lssy `max` (if connect then lcsx+lisy else 0)
+    newlis  = lisx `max` (if connect then (tlx+lisy) else 0)
+    newlcs  = lcsy `max` (if connect then (tly+lcsx) else 0)
+    newok   = okx && oky
+    \end{lstlisting}
+    \caption{The code written for the second task of the assignment.}
+    \label{fig:t2code}
+\end{figure}
+
+\begin{itemize}
+    \item[Line 1] Check wether the predicate $p$ holds over the edge between the
+    segments, that is: If we have a list of the last element from list $x$ and
+    the first element of list $y$, does $p$ still hold. The is used to determine
+    how the two lists can be connected.
+
+    \item[Line 2] Sets the length of the new longest satisfying segment in the
+    joined list based on which value is larger: The LSS from list $x$, the LSS
+    fomr list $y$ and if the \texttt{connect} value from Line 1 is ``true'' then
+    the length of the concluding segment of $x$ joined with the length of the
+    initial segment of $y$.
+
+    \item[Line 3] Sets the length of the longest satisfying initial segment for
+    the joined list by selecting the maximum of either: Length of the initial
+    segment of list $x$ or if the \texttt{connect} value is true, it will take
+    the total length of $x$ plus the length of the initial segment of $y$.
+
+    \item[Line 4] Sets the length of the longest satisfying concluding segment
+    for the joined list. Uses same method as above, and the length values of
+    longest satisfying concluding segment for $y$ or if \texttt{connect} is set,
+    the total length of $y$ plus the length of the concluding segment of $x$.
+
+    \item[Line 5] Determines wether or not the joined segment is ok by doing an
+    ``and'' on the ok status of $x$ and $y$.
+\end{itemize}

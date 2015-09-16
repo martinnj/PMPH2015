@@ -204,27 +204,23 @@ flatQuicksort ne sizes arr =
 --- IF YOU GET IT RIGHT flatQuicksort should WORK!---
 -----------------------------------------------------
 
-
-splitter :: [Int] -> [a] -> [[a]]
-splitter [l] xs = let
-    (l1, l2) = splitAt l xs
-    in [l1]
-splitter (l:ls) xs = let
-    (l1, l2) = splitAt l xs
-    in l1 : (splitter ls l2)
-
 segmSpecialFilter :: (a->Bool) -> [Int] -> [a] -> ([Int],[a])
 segmSpecialFilter cond sizes arr = let
-    segLengths = filter (\x -> x /= 0) sizes
+    segLengths = filter (\x -> x /= 0) sizes -- TODO: Can parFilter be used?
     segments = splitter segLengths arr
-    (resArr, resSizes) = unzip $ map (parFilter cond) segments -- return is on form [([a],[Int-flags])]
+    (resArr, resSizes) = unzip $ map (parFilter cond) segments
     res1 = reduce (++) [] resArr
     res2 = reduce (++) [] resSizes
     in (res2,res1)
-
--- split input list up as the sizes list dictate
--- map parFilter to each segment using cond as a function.
--- concat the flags for each segment and the data for each segment.
+    where
+        -- Helper function to split list into segments.
+        splitter :: [Int] -> [a] -> [[a]]
+        splitter [l] xs = let
+            (l1, l2) = splitAt l xs
+            in [l1]
+        splitter (l:ls) xs = let
+            (l1, l2) = splitAt l xs
+            in l1 : (splitter ls l2)
 
 -----------------------------------------------------
 --- ASSIGNMENT 1: implement sparse matrix-vector  ---

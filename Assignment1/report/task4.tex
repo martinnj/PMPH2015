@@ -1,1 +1,63 @@
 \section{Task 4}
+
+The attached program will map the function $\symbol{92} x -> (x/(x-2.3))^3$ unto
+the array $[1,..,753411]$ both sequanteially and using a CUDA kernel for doing
+it in parallel. Both runs are timed and the results are compared to verify that
+the CPU and GPU are agreeing on the result. For all the runs I did the results
+we're close enough to satisfy the above function.
+
+The timing is done only for the calculation and not copying data to the graphics
+cards or allocating memory. The verification of the results is done using the
+following check $\text{abs}(cpu_t - gpu_t) < \epsilon$. All test runs was run on
+one of the compute machines we we're granted access to as part of the course.
+
+\begin{table}
+    \center
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Array Size} & \textbf{CPU Time} & \textbf{GPU Time} \\\hline
+           100 &    50 &  63 \\
+           200 &    90 &  65 \\
+           300 &    73 &  66 \\
+           400 &    82 &  65 \\
+           500 &    91 & 103 \\
+           600 &   130 & 107 \\
+           700 &   111 & 105 \\
+           800 &   120 &  80 \\
+           900 &   152 &  80 \\
+          1000 &   143 &  76 \\
+          1100 &   144 &  77 \\
+          1300 &   162 &  68 \\
+          1500 &   184 & 150 \\
+          2000 &   247 &  77 \\
+          3000 &   360 &  75 \\
+          5000 &   482 &  77 \\
+         10000 &  1122 &  95 \\
+         15000 &  1320 &  80 \\
+         50000 &  5657 & 149 \\
+        100000 &  8233 & 173 \\
+        150000 & 12266 & 244 \\
+        200000 & 16357 & 278 \\
+        250000 & 20409 & 341 \\
+        300000 & 24426 & 356 \\
+        350000 & 28524 & 434 \\
+        400000 & 32492 & 444 \\
+        500000 & 42428 & 578 \\
+        600000 & 48733 & 635 \\
+        700000 & 56853 & 747 \\
+        753411 & 61204 & 806 \\\hline
+    \end{tabular}
+    \caption{The runtimes reported by the program, measured in microseconds.}
+    \label{tab:times}
+\end{table}
+
+
+The timing results for different array sizes are shown in Table \ref{tab:times}
+and shows that the CPU generally are only faster at very small array sizes.
+According to my measurements already between 100-200 elements, the GPU code runs
+faster than the sequential CPU code. Furthermore the increase in compute time
+rises a lot faster for the CPU code compared to the GPU version.
+
+Since the measurements are in microseconds on a time shared machine there was
+some inaccuracies, the values in Table \ref{tab:times} is the average of running
+the program 5 times after each other.

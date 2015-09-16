@@ -1,1 +1,44 @@
 \section{Task 3}
+
+For this section I implemented a filter function called
+\texttt{segmSpecialFilter} which takes a predicate as well as an input list of
+data, and an info list with the segmentation information for the data list. The
+function then orders the segments based on the predicate result for each element
+and returns the segments joined into a list and a new segmentation information
+list. Figure \ref{fig:t3code} shows my implementation of the function.
+
+\begin{figure}[ht]
+    \begin{lstlisting}
+        segmSpecialFilter :: (a->Bool) -> [Int] -> [a] -> ([Int],[a])
+        segmSpecialFilter cond sizes arr = let
+            segLengths = filter (\x -> x /= 0) sizes
+            segments = splitter segLengths arr
+            (resArr, resSizes) = unzip $ map (parFilter cond) segments
+            res1 = reduce (++) [] resArr
+            res2 = reduce (++) [] resSizes
+            in (res2,res1)
+            where
+                -- Helper function to split list into segments.
+                splitter :: [Int] -> [a] -> [[a]]
+                splitter [l] xs = let
+                    (l1, l2) = splitAt l xs
+                    in [l1]
+                splitter (l:ls) xs = let
+                    (l1, l2) = splitAt l xs
+                    in l1 : (splitter ls l2)
+    \end{lstlisting}
+    \caption{The code written for the third task of the assignment.}
+    \label{fig:t3code}
+\end{figure}
+
+The first thing that happens is that the sizes list have all it's zeroes
+removed, so it is essentially a list of segment lengths. Afterwords a helper
+function is called with the list of lengths as well as the input list which
+splits the list into a list of lists which corresponds to the segments. The
+\texttt{splitter} function is recursive and thus not flat, due to time
+constraints I was unable to figure out a flat and thus more parallisable way to
+do this. After this a \texttt{parFilter} with the predicate is applied to each
+segment using map, and the result is unzipped into a tuple with two lists: The
+restulting arrays and resulting segment information lists. These lists are then
+reduced individually with the concatenation operator and an empty list to form a
+list with the filtered segments and a list with the segment information.
