@@ -35,3 +35,6 @@
 *.fls
 *.log
 *.toc
+
+# Ignore handins.
+*/handin/*
