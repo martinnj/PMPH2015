@@ -5,12 +5,12 @@ the program in Figure \ref{fig:t21code} 5 questions (a-e) need to be answered.
 
 \begin{figure}[ht]
     \begin{lstlisting}[language={[x86masm]Assembler}]
-SEARCH:     LW R5, 0(R3)        /I1 Load item
-            SUB R6, R5, R2      /I2 compare with key
-            BNEZ R6, NOMATCH    /I3 check for match
-            ADDI R1, R1, #1     /I4 count matches
-NOMATCH:    ADDI R3, R3, #4     /I5 next item
-            BNE R4, R3, SEARCH  /I6 continue until all items
+    SEARCH:     LW R5, 0(R3)        /I1 Load item
+                SUB R6, R5, R2      /I2 compare with key
+                BNEZ R6, NOMATCH    /I3 check for match
+                ADDI R1, R1, #1     /I4 count matches
+    NOMATCH:    ADDI R3, R3, #4     /I5 next item
+                BNE R4, R3, SEARCH  /I6 continue until all items
     \end{lstlisting}
     \caption{Code given in the assignment text.}
     \label{fig:t21code}
@@ -18,8 +18,163 @@ NOMATCH:    ADDI R3, R3, #4     /I5 next item
 
 \subsection{a) Inserting NOOPS}
 
+\begin{figure}[ht]
+    \begin{lstlisting}[language={[x86masm]Assembler}]
+    SEARCH:     LW R5, 0(R3)        /I1 Load item
+                NOP
+                NOP
+                NOP
+                SUB R6, R5, R2      /I2 compare with key
+                NOP
+                NOP
+                NOP
+                BNEZ R6, NOMATCH    /I3 check for match
+                NOP
+                NOP
+                ADDI R1, R1, #1     /I4 count matches
+    NOMATCH:    ADDI R3, R3, #4     /I5 next item
+                NOP
+                NOP
+                NOP
+                BNE R4, R3, SEARCH  /I6 continue until all items
+                NOP
+                NOP
+    \end{lstlisting}
+    \caption{Code after insertion of \texttt{NOOP}s.}
+    \label{fig:t21a}
+\end{figure}
 
-\subsection{b)}
-\subsection{c)}
-\subsection{d)}
-\subsection{e)}
+\subsection{b) Execution time (clocks) with stalling}
+\begin{itemize}
+    \item[Hit: ] Table \ref{tab:t21bhit}
+
+    \item[No Hit: ] Table \ref{tab:t21bmiss}
+\end{itemize}
+
+
+\begin{landscape}
+    \begin{table}[]
+    \centering
+    \begin{tabular}{llllllllllllllll}
+    \hline
+             &                                         & c1 & c2 & c3 & c4 & c5 & c6 & c7 & c8 & c9 & c10 & c11 & c12 & c13 & c14 \\ \hline
+    SEARCH:  & \multicolumn{1}{l|}{LW R5, 0(R3)}       & IF & ID & EX & ME & WB &    &    &    &    &     &     &     &     &     \\
+             & \multicolumn{1}{l|}{SUB R6, R5, R2}     &    & IF & ID & ID & ID & EX & ME & WB &    &     &     &     &     &     \\
+             & \multicolumn{1}{l|}{BNEZ R6, NOMATCH}   &    &    & IF & IF & IF & ID & ID & ID & EX &     &     &     &     &     \\
+             & \multicolumn{1}{l|}{ADDI R1, R1, \#1}   &    &    &    &    &    & IF & IF & IF & ID & EX  & ME  & WB  &     &     \\
+    NOMATCH: & \multicolumn{1}{l|}{ADDI R3, R3, \#4}   &    &    &    &    &    &    &    &    & IF & ID  & EX  & ME  & WB  &     \\
+             & \multicolumn{1}{l|}{BNE R4, R3, SEARCH} &    &    &    &    &    &    &    &    &    & IF  & ID  & ID  & ID  & EX  \\ \hline
+    \end{tabular}
+    \caption{Execution table showing where in the pipeline different instructions are for different clocks if there is a hit in the search loop.}
+    \label{tab:t21bhit}
+    \end{table}
+
+    \begin{table}[]
+    \centering
+    \begin{tabular}{lllllllllllllllllll}
+    \hline
+             &                                         & c1 & c2 & c3 & c4 & c5 & c6 & c7 & c8 & c9                      & c10 & c11 & c12 & c13 & c14 & c15 & c16 & c17 \\ \hline
+    SEARCH:  & \multicolumn{1}{l|}{LW R5, 0(R3)}       & IF & ID & EX & ME & WB &    &    &    &                         &     &     &     &     &     &     &     &    \\
+             & \multicolumn{1}{l|}{SUB R6, R5, R2}     &    & IF & ID & ID & ID & EX & ME & WB &                         &     &     &     &     &     &     &     &     \\
+             & \multicolumn{1}{l|}{BNEZ R6, NOMATCH}   &    &    & IF & IF & IF & ID & ID & ID & \multicolumn{1}{l|}{EX} &     &     &     &     &     &     &     &     \\
+             & \multicolumn{1}{l|}{ADDI R1, R1, \#1}   &    &    &    &    &    &    &    & IF & \multicolumn{1}{l|}{ID} &     &     &     &     &     &     &     &     \\
+    NOMATCH: & \multicolumn{1}{l|}{ADDI R3, R3, \#4}   &    &    &    &    &    &    &    &    & \multicolumn{1}{l|}{IF} & IF  & ID  & EX  & ME  & WB  &     &     &     \\
+             & \multicolumn{1}{l|}{BNE R4, R3, SEARCH} &    &    &    &    &    &    &    &    &                         &     & IF  & ID  & ID  & ID  & EX  & ME  & WB  \\ \hline
+    \end{tabular}
+    \caption{Execution table showing where in the pipeline different instructions are for different clocks if there is no hit in the search loop. The vertical line in the middle of the table indicates that \texttt{IF} and \texttt{ID} was flushed.}
+    \label{tab:t21bmiss}
+    \end{table}
+\end{landscape}
+
+
+\subsection{c) Execution time (clocks) with stalling and register forwarding}
+\begin{itemize}
+    \item[Hit: ] Table \ref{tab:t21chit}
+
+    \item[No Hit: ] Table \ref{tab:t21cmiss}
+\end{itemize}
+
+\begin{landscape}
+
+    \begin{table}[]
+    \centering
+    \begin{tabular}{llllllllllllllll}
+    \hline
+             &                                         & c1 & c2 & c3 & c4 & c5 & c6 & c7 & c8 & c9 & c10 & c11 \\ \hline
+    SEARCH:  & \multicolumn{1}{l|}{LW R5, 0(R3)}       & IF & ID & EX & ME & WB &    &    &    &    &     &     \\
+             & \multicolumn{1}{l|}{SUB R6, R5, R2}     &    & IF & ID & ID & ID & EX & ME & WB &    &     &     \\
+             & \multicolumn{1}{l|}{BNEZ R6, NOMATCH}   &    &    & IF & IF & IF & ID & EX &    &    &     &     \\
+             & \multicolumn{1}{l|}{ADDI R1, R1, \#1}   &    &    &    &    &    & IF & ID & EX & ME & WB  &     \\
+    NOMATCH: & \multicolumn{1}{l|}{ADDI R3, R3, \#4}   &    &    &    &    &    &    & IF & ID & EX & ME  & WB  \\
+             & \multicolumn{1}{l|}{BNE R4, R3, SEARCH} &    &    &    &    &    &    &    & IF & ID & EX  &     \\ \hline
+    \end{tabular}
+    \caption{Execution table when using stalling and register forwarding. This is the result of the loop does hit a match}
+    \label{tab:t21chit}
+    \end{table}
+
+    \begin{table}[]
+    \centering
+    \begin{tabular}{llllllllllllllll}
+    \hline
+             &                                         & c1 & c2 & c3 & c4 & c5 & c6 & c7                      & c8 & c9 & c10 & c11 & c12 \\ \hline
+    SEARCH:  & \multicolumn{1}{l|}{LW R5, 0(R3)}       & IF & ID & EX & ME & WB &    &                         &    &    &     &     &     \\
+             & \multicolumn{1}{l|}{SUB R6, R5, R2}     &    & IF & ID & ID & ID & EX & ME                      & WB &    &     &     &     \\
+             & \multicolumn{1}{l|}{BNEZ R6, NOMATCH}   &    &    & IF & IF & IF & ID & EX                      &    &    &     &     &     \\
+             & \multicolumn{1}{l|}{ADDI R1, R1, \#1}   &    &    &    &    &    & IF & \multicolumn{1}{l|}{ID} &    &    &     &     &     \\
+    NOMATCH: & \multicolumn{1}{l|}{ADDI R3, R3, \#4}   &    &    &    &    &    &    & \multicolumn{1}{l|}{IF} & IF & ID & EX  & ME  & WB  \\
+             & \multicolumn{1}{l|}{BNE R4, R3, SEARCH} &    &    &    &    &    &    &                         &    & IF & ID  & EX  &     \\ \hline
+    \end{tabular}
+    \caption{Execution table when using stalling and register forwarding. This is the result of the loop does not hit a match. The vertical line in the middle of the table indicates that \texttt{IF} and \texttt{ID} was flushed.}
+    \label{tab:t21cmiss}
+    \end{table}
+
+\end{landscape}
+
+
+
+
+\subsection{d) Execution time (clocks) with stalling and full forwarding}
+\begin{itemize}
+    \item[Hit: ] Table \ref{tab:t21dhit}
+
+    \item[No Hit: ] Table \ref{tab:t21dmiss}
+\end{itemize}
+
+\begin{landscape}
+    \begin{table}[]
+    \centering
+    \begin{tabular}{lllllllllll}
+    \hline
+             &                                         & c1 & c2 & c3 & c4 & c5 & c6 & c7 & c8 & c9 \\ \hline
+    SEARCH:  & \multicolumn{1}{l|}{LW R5, 0(R3)}       & IF & ID & EX & ME & WB &    &    &    &    \\
+             & \multicolumn{1}{l|}{SUB R6, R5, R2}     &    & IF & ID & EX & ME & WB &    &    &    \\
+             & \multicolumn{1}{l|}{BNEZ R6, NOMATCH}   &    &    & IF & ID & EX &    &    &    &    \\
+             & \multicolumn{1}{l|}{ADDI R1, R1, \#1}   &    &    &    & IF & ID & EX & ME & WB &    \\
+    NOMATCH: & \multicolumn{1}{l|}{ADDI R3, R3, \#4}   &    &    &    &    & IF & ID & EX & ME & WB \\
+             & \multicolumn{1}{l|}{BNE R4, R3, SEARCH} &    &    &    &    &    & IF & ID & EX &    \\ \hline
+    \end{tabular}
+    \caption{Execution table when using stalling and full forwarding. This is the result of the loop does hit a match.}
+    \label{tab:t21dhit}
+    \end{table}
+
+    \begin{table}[]
+    \centering
+    \begin{tabular}{llllllllllllllll}
+    \hline
+             &                                         & c1 & c2 & c3 & c4 & c5                      & c6 & c7 & c8 & c9 & c10 \\ \hline
+    SEARCH:  & \multicolumn{1}{l|}{LW R5, 0(R3)}       & IF & ID & EX & ME & WB                      &    &    &    &    &     \\
+             & \multicolumn{1}{l|}{SUB R6, R5, R2}     &    & IF & ID & EX & ME                      & WB &    &    &    &     \\
+             & \multicolumn{1}{l|}{BNEZ R6, NOMATCH}   &    &    & IF & ID & EX                      &    &    &    &    &     \\
+             & \multicolumn{1}{l|}{ADDI R1, R1, \#1}   &    &    &    & IF & \multicolumn{1}{l|}{ID} &    &    &    &    &     \\
+    NOMATCH: & \multicolumn{1}{l|}{ADDI R3, R3, \#4}   &    &    &    &    & \multicolumn{1}{l|}{IF} & IF & ID & EX & ME & WB  \\
+             & \multicolumn{1}{l|}{BNE R4, R3, SEARCH} &    &    &    &    &                         &    & IF & ID & EX &     \\ \hline
+    \end{tabular}
+    \caption{Execution table when using stalling and full forwarding. This is the result of the loop does not hit a match. The vertical line in the middle of the table indicates that \texttt{IF} and \texttt{ID} was flushed.}
+    \label{tab:t21dmiss}
+    \end{table}
+\end{landscape}
+
+
+
+\subsection{e) Loop unrolling}
+\todo[inline]{Will loop unrolling help?}

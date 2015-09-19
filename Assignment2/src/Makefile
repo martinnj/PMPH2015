@@ -12,7 +12,7 @@ default: compile
 
 
 compile: $(EXECUTABLE)
-$(EXECUTABLE): 
+$(EXECUTABLE):
 	$(CXX) -o $(EXECUTABLE) $(SOURCES_CPP)
 
 
@@ -21,4 +21,3 @@ run: $(EXECUTABLE)
 
 clean:
 	rm -f $(EXECUTABLE)
-

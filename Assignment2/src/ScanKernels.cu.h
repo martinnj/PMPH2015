@@ -24,19 +24,19 @@ class MyInt4 {
     int x; int y; int z; int w;
 
     __device__ __host__ inline MyInt4() {
-        x = 0; y = 0; z = 0; w = 0; 
+        x = 0; y = 0; z = 0; w = 0;
     }
 
     __device__ __host__ inline MyInt4(const int& a, const int& b, const int& c, const int& d) {
-        x = a; y = b; z = c; w = d; 
+        x = a; y = b; z = c; w = d;
     }
 
-    __device__ __host__ inline MyInt4(const MyInt4& i4) { 
-        x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
+    __device__ __host__ inline MyInt4(const MyInt4& i4) {
+        x = i4.x; y = i4.y; z = i4.z; w = i4.w;
     }
 
     volatile __device__ __host__ inline MyInt4& operator=(const MyInt4& i4) volatile {
-        x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
+        x = i4.x; y = i4.y; z = i4.z; w = i4.w;
         return *this;
     }
 };
@@ -44,15 +44,62 @@ class MyInt4 {
 class MsspOp {
   public:
     typedef MyInt4 BaseType;
-    static __device__ inline MyInt4 identity() { return MyInt4(0,0,0,0); }  
-    static __device__ inline MyInt4 apply(volatile MyInt4& t1, volatile MyInt4& t2) { 
-        int mss = 0; // ... fill in the blanks ...
-        int mis = 0; // ... fill in the blanks ...
-        int mcs = 0; // ... fill in the blanks ...
-        int t   = 0; // ... fill in the blanks ...
-        return MyInt4(mss, mis, mcs, t); 
+    static __device__ inline MyInt4 identity() { return MyInt4(0,0,0,0); }
+    static __device__ inline MyInt4 apply(volatile MyInt4& t1, volatile MyInt4& t2) {
+        int mssx = t1.x;
+        int mssy = t2.x;
+        int misx = t1.y;
+        int misy = t2.y;
+        int mcsx = t1.z;
+        int mcsy = t2.z;
+        int tsx = t1.w;
+        int tsy = t2.w;
+
+        int mss = max(mssx, max(mssy, (mcsx + misy))); // (mss x) max (mss y) max ((mcs x) + (mis y))
+        int mis = max(misx, (tsx + tsy));              // (mis x) max ((ts x)+(mis y))
+        int mcs = max(mcsy, (tsy + mcsx));             // (mcs y) max ((ts y)+(mcs x))
+        int t   = tsx + tsy;                           // ts x + ts y
+        return MyInt4(mss, mis, mcs, t);
+    }
+
+private:
+    static __device__ int max(int x, int y) {
+        if(x >= y) { return x; }
+        return y;
     }
 };
+
+class CpuMsspOp {
+  public:
+    typedef MyInt4 BaseType;
+    static inline MyInt4 identity() { return MyInt4(0,0,0,0); }
+    static inline MyInt4 apply(MyInt4& t1, MyInt4& t2) {
+        int mssx = t1.x;
+        int mssy = t2.x;
+        int misx = t1.y;
+        int misy = t2.y;
+        int mcsx = t1.z;
+        int mcsy = t2.z;
+        int tsx = t1.w;
+        int tsy = t2.w;
+
+        int mss = max(mssx, max(mssy, (mcsx + misy))); // (mss x) max (mss y) max ((mcs x) + (mis y))
+        int mis = max(misx, (tsx + tsy));              // (mis x) max ((ts x)+(mis y))
+        int mcs = max(mcsy, (tsy + mcsx));             // (mcs y) max ((ts y)+(mcs x))
+        int t   = tsx + tsy;                           // ts x + ts y
+        return MyInt4(mss, mis, mcs, t);
+    }
+};
+
+template<class T1, class T2>
+__global__ void
+MssMapKernel(T1* d_in, T2* d_out, const unsigned int d_size) {
+    const unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    if(tid < d_size) {
+      T1 x = d_in[tid];
+      d_out[tid] = T2(x, x, x, x);
+    }
+}
 
 /***************************************/
 /*** Scan Inclusive Helpers & Kernel ***/
@@ -64,7 +111,7 @@ T scanIncWarp( volatile T* ptr, const unsigned int idx ) {
 
     // no synchronization needed inside a WARP,
     //   i.e., SIMD execution
-    if (lane >= 1)  ptr[idx] = OP::apply(ptr[idx-1],  ptr[idx]); 
+    if (lane >= 1)  ptr[idx] = OP::apply(ptr[idx-1],  ptr[idx]);
     if (lane >= 2)  ptr[idx] = OP::apply(ptr[idx-2],  ptr[idx]);
     if (lane >= 4)  ptr[idx] = OP::apply(ptr[idx-4],  ptr[idx]);
     if (lane >= 8)  ptr[idx] = OP::apply(ptr[idx-8],  ptr[idx]);
@@ -84,9 +131,9 @@ T scanIncBlock(volatile T* ptr, const unsigned int idx) {
 
     // place the end-of-warp results in
     //   the first warp. This works because
-    //   warp size = 32, and 
+    //   warp size = 32, and
     //   max block size = 32^2 = 1024
-    if (lane == 31) { ptr[warpid] = const_cast<T&>(ptr[idx]); } 
+    if (lane == 31) { ptr[warpid] = const_cast<T&>(ptr[idx]); }
     __syncthreads();
 
     //
@@ -101,7 +148,7 @@ T scanIncBlock(volatile T* ptr, const unsigned int idx) {
 }
 
 template<class OP, class T>
-__global__ void 
+__global__ void
 scanIncKernel(T* d_in, T* d_out, unsigned int d_size) {
     extern __shared__ char sh_mem1[];
     volatile T* sh_memT = (volatile T*)sh_mem1;
@@ -111,7 +158,68 @@ scanIncKernel(T* d_in, T* d_out, unsigned int d_size) {
     sh_memT[tid] = el;
     __syncthreads();
     T res   = scanIncBlock < OP, T >(sh_memT, tid);
-    if (gid < d_size) d_out [gid] = res; 
+    if (gid < d_size) d_out [gid] = res;
+}
+
+
+/***************************************/
+/*** Scan Exclusive Helpers & Kernel ***/
+/***************************************/
+template<class OP, class T>
+__device__ inline
+T scanExcWarp( volatile T* ptr, const unsigned int idx ) {
+    const unsigned int lane = idx & 31; // Only use 5 least significant bits. (0-31)
+
+    // no synchronization needed inside a WARP,
+    //   i.e., SIMD execution
+    if (lane >= 1)  ptr[idx] = OP::apply(ptr[idx-1],  ptr[idx]);
+    if (lane >= 2)  ptr[idx] = OP::apply(ptr[idx-2],  ptr[idx]);
+    if (lane >= 4)  ptr[idx] = OP::apply(ptr[idx-4],  ptr[idx]);
+    if (lane >= 8)  ptr[idx] = OP::apply(ptr[idx-8],  ptr[idx]);
+    if (lane >= 16) ptr[idx] = OP::apply(ptr[idx-16], ptr[idx]);
+
+    return const_cast<T&>(ptr[idx]);
+}
+
+template<class OP, class T>
+__device__ inline
+T scanExcBlock(volatile T* ptr, const unsigned int idx) {
+    const unsigned int lane   = idx &  31;
+    const unsigned int warpid = idx >> 5;
+
+    T val = scanExcWarp<OP,T>(ptr,idx);
+    __syncthreads();
+
+    // place the end-of-warp results in
+    //   the first warp. This works because
+    //   warp size = 32, and
+    //   max block size = 32^2 = 1024
+    if (lane == 31) { ptr[warpid] = const_cast<T&>(ptr[idx]); }
+    __syncthreads();
+
+    //
+    if (warpid == 0) scanExcWarp<OP,T>(ptr, idx);
+    __syncthreads();
+
+    if (warpid > 0) {
+        val = OP::apply(ptr[warpid-1], val);
+    }
+
+    return val;
+}
+
+template<class OP, class T>
+__global__ void
+scanExcKernel(T* d_in, T* d_out, unsigned int d_size) {
+    extern __shared__ char sh_mem1[];
+    volatile T* sh_memT = (volatile T*)sh_mem1;
+    const unsigned int tid = threadIdx.x;
+    const unsigned int gid = blockIdx.x*blockDim.x + tid;
+    T el    = (gid < d_size) ? d_in[gid] : OP::identity();
+    sh_memT[tid] = el;
+    __syncthreads();
+    T res   = scanExcBlock < OP, T >(sh_memT, tid);
+    if (gid < d_size) d_out [gid] = res;
 }
 
 
@@ -120,28 +228,30 @@ scanIncKernel(T* d_in, T* d_out, unsigned int d_size) {
 /***********************************************************/
 
 template<class T>
-__global__ void 
+__global__ void
 copyEndOfBlockKernel(T* d_in, T* d_out, unsigned int d_out_size) {
     const unsigned int gid = blockIdx.x*blockDim.x + threadIdx.x;
-    
+
     if(gid < d_out_size)
         d_out[gid] = d_in[ blockDim.x*(gid+1) - 1];
 }
 
 template<class OP, class T>
-__global__ void 
+__global__ void
 distributeEndBlock(T* d_in, T* d_out, unsigned int d_size) {
     const unsigned int gid = blockIdx.x*blockDim.x + threadIdx.x;
-    
+
     if(gid < d_size && blockIdx.x > 0)
-        d_out[gid] = OP::apply(d_out[gid],d_in[blockIdx.x-1]);
+        //d_out[gid] = OP::apply(d_out[gid],d_in[blockIdx.x-1]);//TODO: Is this supposed to be switched?
+        //https://absalon.itslearning.com/ContentArea/ContentArea.aspx?LocationID=62977&LocationType=1
+        d_out[gid] = OP::apply(d_in[blockIdx.x-1],d_out[gid]);
 }
 
 template<class T>
-__global__ void 
+__global__ void
 shiftRightByOne(T* d_in, T* d_out, T ne, unsigned int d_size) {
     const unsigned int gid = blockIdx.x*blockDim.x + threadIdx.x;
-    
+
     if      (gid == 0)      d_out[gid] = ne;
     else if (gid < d_size)  d_out[gid] = d_in[gid-1];
 }
@@ -198,8 +308,8 @@ T sgmScanIncBlock(volatile T* ptr, volatile F* flg, const unsigned int idx) {
 
     // 2a: the last value is the correct partial result
     T warp_total = const_cast<T&>(ptr[warplst]);
-    
-    // 2b: warp_flag is the OR-reduction of the flags 
+
+    // 2b: warp_flag is the OR-reduction of the flags
     //     in a warp, and is computed indirectly from
     //     the mindex in hd[]
     bool warp_flag = flg[warplst]!=0 || !warp_is_open;
@@ -211,12 +321,12 @@ T sgmScanIncBlock(volatile T* ptr, volatile F* flg, const unsigned int idx) {
     //     in the first warp. Note that all fit in the first
     //     warp because warp = 32 and max block size is 32^2
     if (lane == 31) {
-        ptr[warpid] = warp_total; //ptr[idx]; 
+        ptr[warpid] = warp_total; //ptr[idx];
         flg[warpid] = warp_flag;
     }
     __syncthreads();
 
-    // 
+    //
     if (warpid == 0) sgmScanIncWarp<OP,T>(ptr, flg, idx);
     __syncthreads();
 
@@ -227,21 +337,21 @@ T sgmScanIncBlock(volatile T* ptr, volatile F* flg, const unsigned int idx) {
 }
 
 template<class OP, class T>
-__global__ void 
-sgmScanIncKernel(T* d_in, int* flags, T* d_out, 
+__global__ void
+sgmScanIncKernel(T* d_in, int* flags, T* d_out,
                           int* f_rec, T* d_rec, unsigned int d_size) {
     extern __shared__ char sh_mem[];
     volatile T*   vals_sh = (volatile T*)sh_mem;
     volatile int* flag_sh = (int*) (vals_sh + blockDim.x);
     const unsigned int tid = threadIdx.x;
     const unsigned int gid = blockIdx.x*blockDim.x + tid;
-    int fl;   
+    int fl;
     if (gid < d_size) { vals_sh[tid] = d_in[gid];      fl = flags[gid]; }
     else              { vals_sh[tid] = OP::identity(); fl = 0;          }
     flag_sh[tid] = fl;
     __syncthreads();
     T res = sgmScanIncBlock <OP, T>(vals_sh, flag_sh, tid);
-    if (gid < d_size) d_out [gid] = res; 
+    if (gid < d_size) d_out [gid] = res;
 
     // set the flags and data for the recursive step!
     if(tid == 0)  { f_rec[blockIdx.x] = 0; }
@@ -251,10 +361,10 @@ sgmScanIncKernel(T* d_in, int* flags, T* d_out,
 }
 
 template<class OP, class T>
-__global__ void 
+__global__ void
 sgmDistributeEndBlock(T* d_rec_in, T* d_out, int* f_inds, unsigned int d_size) {
     const unsigned int gid = blockIdx.x*blockDim.x + threadIdx.x;
-    
+
     if(gid < d_size && blockIdx.x > 0) {
         if(f_inds[gid] == 0)
             d_out[gid] = OP::apply(d_out[gid], d_rec_in[blockIdx.x-1]);
@@ -273,7 +383,7 @@ sgmDistributeEndBlock(T* d_rec_in, T* d_out, int* f_inds, unsigned int d_size) {
  * d_size   if the size of the input, flag, and output arrays
  **/
 template<class T>
-__global__ void 
+__global__ void
 sgmShiftRightByOne(T* d_in, int*flags, T* d_out, T ne, unsigned int d_size) {
     const unsigned int gid = blockIdx.x*blockDim.x + threadIdx.x;
     if(gid < d_size) {
@@ -287,11 +397,11 @@ sgmShiftRightByOne(T* d_in, int*flags, T* d_out, T ne, unsigned int d_size) {
  * inp_d    the original array (of ints)
  * inp_lift the result array, in which an integer x in inp_d
  *              should be transformed to MyInt4(x,x,x,x) if x > 0
- *                                and to MyInt4(0,0,0,x) otherwise 
+ *                                and to MyInt4(0,0,0,x) otherwise
  * inp_size is the size of the original (and output) array
  *              in number of int (MyInt4) elements
  **/
-__global__ void 
+__global__ void
 msspTrivialMap(int* inp_d, MyInt4* inp_lift, int inp_size) {
     const unsigned int gid = blockIdx.x*blockDim.x + threadIdx.x;
     if(gid < inp_size) {
@@ -304,11 +414,11 @@ msspTrivialMap(int* inp_d, MyInt4* inp_lift, int inp_size) {
  * mat_vals  the values of the matrix
  * vct       the values of the vector
  * tot_size  the total number of (non-zero) elements of the matrix
- * tmp_pairs the result array: should hold the mutiplication between 
+ * tmp_pairs the result array: should hold the mutiplication between
  *              each matrix (non-zero) value and the corresponding vct element,
  *              which is found via mat_inds.
  */
-__global__ void 
+__global__ void
 spMatVctMult_pairs(int* mat_inds, float* mat_vals, float* vct, int tot_size, float* tmp_pairs) {
     const unsigned int gid = blockIdx.x*blockDim.x + threadIdx.x;
     if(gid < tot_size) {
@@ -319,14 +429,14 @@ spMatVctMult_pairs(int* mat_inds, float* mat_vals, float* vct, int tot_size, flo
 /**
  * tmp_scan  the segmented scan (+) version of the flat matrix,
  *               i.e., the last element of each segment is the
- *               result vector value. 
- * tmp_inds  IF `gid' is the index of the LAST ELEMENT of a SEGMENT (row) 
+ *               result vector value.
+ * tmp_inds  IF `gid' is the index of the LAST ELEMENT of a SEGMENT (row)
  *               then (tmp_inds[gid]-1) is the index in `vct_res' where that
- *               element should be stored, i.e., 
+ *               element should be stored, i.e.,
  *               vct_res[tmp_inds[gid]-1] = tmp_scan[gid]
- * flags_d   denote the starts of the rows of the flat matrix, i.e., 
+ * flags_d   denote the starts of the rows of the flat matrix, i.e.,
  *               flags[gid]!=0 then a new row starts at position `gid'.
- *               It follows that an index `gid' corresponds to the 
+ *               It follows that an index `gid' corresponds to the
  *               last element of a row if flags_d[gid+1] != 0
  * tot_size  the total number of elements of the flat matrix
  * vct_res   the result vector
@@ -341,4 +451,3 @@ write_lastSgmElem(float* tmp_scan, int* tmp_inds, int* flags_d, int tot_size, fl
 
 
 #endif //SCAN_KERS
-

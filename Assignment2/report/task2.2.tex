@@ -1,1 +1,21 @@
 \section{Task II.2: Vector Processors}
+
+\subsection{Part a}
+\begin{figure}[ht]
+    % R1 = k
+    % R2 = x
+    % R3 = y
+    % R4 = p
+    % R6 = stride
+    \begin{lstlisting}[language={[x86masm]Assembler}]
+        ADDI R6, R0, #1     /Set stride to 1
+LOOP:
+        L.V  V1, 0(R2), R6  /Load vector x from base 0(R1)
+
+    \end{lstlisting}
+    \caption{Code given in the assignment text.}
+    \label{fig:t21code}
+\end{figure}
+
+\subsection{Part b}
+\subsection{Part c}
