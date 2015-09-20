@@ -1,21 +1,97 @@
 \section{Task II.2: Vector Processors}
 
 \subsection{Part a}
-\begin{figure}[ht]
-    % R1 = k
-    % R2 = x
-    % R3 = y
-    % R4 = p
-    % R6 = stride
-    \begin{lstlisting}[language={[x86masm]Assembler}]
-        ADDI R6, R0, #1     /Set stride to 1
-LOOP:
-        L.V  V1, 0(R2), R6  /Load vector x from base 0(R1)
+Figure \ref{fig:t22acode} shows the code converted to assembler using vector
+instructions. To make the code more readable, here is a map of how registers are
+used:
+\begin{itemize*}
+    \item[\texttt{R1}] stores the $k$ variable.
+    \item[\texttt{R2}] stores the address of the $x$ array.
+    \item[\texttt{R3}] stores the address of the $y$ array.
+    \item[\texttt{R4}] stores the address of the $x$ array offset with $k$.
+    \item[\texttt{R5}] stores the address of the $y$ array offset with $k$.
+    \item[\texttt{R6}] stores the address of the $p$ result array.
+    \item[\texttt{R7}] stores the address of the $p$ result array offset with $k$.
+    \item[\texttt{R8}] stores the stride.
+    \item[\texttt{R9}] stores a dot product of the two slices until copied away.
+    \item[\texttt{R10}] stores the value 1023 for use in the loop counter.
+    \item[\texttt{R10}] stores an loop iteration counter.
+    \item[\texttt{V1}] stores the retrieved slice of $x$.
+    \item[\texttt{V2}] stores the retrieved slice of $y$.
+\end{itemize*}
 
+For the conversion of the loop I assumed that the hardware was capable of
+producing the dot product of two vectors using a single instruction. I made the
+assumption since I was unable to find any documentation for which instructions
+we're actually available on the hardware/assembler language. The assignment text
+states that we have  a multiplication pipline, however I am unsure if this is
+only capable of multiplying a scalar to each element in the vector or if it can
+do dot- or cross-products as well.
+
+\begin{figure}[ht]
+    % R1  = k
+    % R2  = &x
+    % R3  = &y
+    % R4  = &x + k
+    % R5  = &x + k
+    % R6  = &p
+    % R8  = stride
+    % R9  = temp p value
+    % R10 = 1023, k limit
+    % R11 = iteration number.
+    % R12 = &p + iteration number
+    \begin{lstlisting}[language={[x86masm]Assembler}]
+    ADDI  R8 , R0, #1     // Set stride to 1
+    ADDI  R11, R0, #0     // Set counter = 0
+    ADDI  R1 , R0, #0     // Set k = 0
+    ADDI  R10, R0, #1023  // Set upper limit for k.
+OUTERLOOP:
+    ADD   R4 , R2, R1     // Get &x + k-offset
+    ADD   R5 , R3, R1     // Get &y + k-offset
+    ADD   R12, R6, R11    // Get &p + iteration-offset
+INNERLOOP:
+    L.V   V1 , 0(R2), R8  // Load vector x from base 0(R2)
+    L.V   V2 , 0(R3), R8  // Load vector y from base 0(R3)
+    DOT.V R9 , V1   , V2  // Perform the dot product.
+    SW    R12, R9         // Store dotproduct of slice on &p + iteration-offset
+    ADDI  R1 , R1   , #64 // k += 64
+    ADDI  R11, R11  , #1  // Increase counter.
+CHECK:
+    BNE   R1, R10, OUTERLOOP // If k != 1023, run loop again.
     \end{lstlisting}
-    \caption{Code given in the assignment text.}
-    \label{fig:t21code}
+    \caption{The vectorized version of the code from the assignment.}
+    \label{fig:t22acode}
 \end{figure}
 
 \subsection{Part b}
+% Memory latency = 30
+% Multiply latency = 10
+% Add latency = 5
+
+If the vector size is 1024, each register will be able to hold all of $x$ og $y$
+in a single register, meaning the loop will run through once and exit.
+
+The first line will take $5$ clocks to start due to the initial latency, lines
+2-4 will take cost $1$ clock each. The first 3 lines will then take
+$5+1+1+1 = 7$ clocks to complete.
+
+Lines $6-8$ additionally takes $1$ clock each as the pipeline is already
+startet, meaning the cost is $1+1+1 = 3$.
+
+Line 10-11 takes $30$ cycles to complete each to access the vector bank. The
+multiplication/dot-product have a latency of $10$ clocks and the storage back
+to memory on line 13 takes an additional $30$ clocks. The two increases on
+line 14-15 takes $1$ clock each. The total for lines 10-15 is then
+$30+30+10+30+1+1 = 102$ clocks.
+
+The last branch takes $1$ clock to execute, so the total execution time for the
+entires loop iteration is $7 + 3 + 102 + 1 = 113$ clocks.
+
+
 \subsection{Part c}
+
+Since the matrix multiplication is a single dot product for each element in the
+resulting matrix. In the previus subsection I calculated that a single dot
+product takes $113$ clocks, for the $1024 \text{ x } 1024$ matrix the total time
+(excluding any overhead for looping over the entries and allocating space etc)
+will be $113 \cdot 1024 \cdot 1024 = 118489088$ clocks.
