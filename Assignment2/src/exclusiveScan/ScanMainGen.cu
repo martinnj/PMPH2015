@@ -96,7 +96,7 @@ int scanIncTest(bool is_segmented) {
 }
 
 
-/*
+
 int scanExcTest(bool is_segmented) {
     const unsigned int num_threads = 8353455;
     const unsigned int block_size  = 512;
@@ -185,165 +185,10 @@ int scanExcTest(bool is_segmented) {
     free(flags_h);
 
     return 0;
-}*/
-
-int gpuMss(int* h_start, unsigned long num_threads, unsigned int block_size) {
-//int gpuMss() {
-    //unsigned int num_threads = 8353455;
-    //unsigned int block_size  = 512;
-    unsigned int mem_start_size = num_threads * sizeof(int);
-    unsigned int mem_mapped_size = num_threads * sizeof(MyInt4);
-    unsigned int num_blocks = ( (num_threads % block_size) == 0) ?
-                    num_threads / block_size     :
-                    num_threads / block_size + 1 ;
-
-    //int* h_start  = (int*) malloc(mem_start_size);
-    //MyInt4* h_mapped = (MyInt4*) malloc(mem_mapped_size);
-    MyInt4* h_scanned = (MyInt4*) malloc(mem_mapped_size);
-
-    //for(unsigned int i=0; i<num_threads; i++) {
-    //    h_start[i] = 1;
-    //}
-
-    int* d_start;
-    cudaMalloc((void**)&d_start, mem_start_size);
-    cudaMemcpy(d_start, h_start, mem_start_size, cudaMemcpyHostToDevice);
-
-
-    MyInt4* d_mapped;
-    cudaMalloc((void**)&d_mapped, mem_mapped_size);
-
-
-    // Perform the map to create the 4-tubles.
-    MssMapKernel<int, MyInt4><<<num_blocks, block_size >>> (d_start, d_mapped, num_threads);
-    //cudaMemcpy(h_mapped, d_mapped, mem_mapped_size, cudaMemcpyDeviceToHost);
-
-
-    MyInt4* d_scanned;
-    cudaMalloc((void**)&d_scanned, mem_mapped_size);
-    scanInc<MsspOp, MyInt4> (block_size, num_threads, d_mapped, d_scanned);
-    cudaMemcpy(h_scanned, d_scanned, mem_mapped_size, cudaMemcpyDeviceToHost);
-
-    int res = h_scanned[num_threads-1].x;
-
-
-    cudaFree(d_start);
-    cudaFree(d_mapped);
-    cudaFree(d_scanned);
-    //free(h_start);
-    free(h_scanned);
-
-    return res;
 }
-
-int cpuMss(int* input, unsigned long input_size) {
-    unsigned int mem_int4_size = input_size * sizeof(MyInt4);
-
-    MyInt4* mapped = (MyInt4*) malloc(mem_int4_size);
-    MyInt4* scanned = (MyInt4*) malloc(mem_int4_size);
-
-    for (unsigned int i = 0 ; i < input_size ; i++) {
-        int x = input[i];
-        mapped[i] = MyInt4(x,x,x,x);
-    }
-
-    /*for (unsigned int i = 0; i < input_size ; i++) {
-        MyInt4 res = mapped[i];
-        printf("mapped[%d]: %d, %d, %d, %d\n", i, res.x, res.y, res.z, res.w);
-    }*/
-
-    MyInt4 identity = CpuMsspOp::identity();
-    MyInt4 first = mapped[0];
-    scanned[0] = CpuMsspOp::apply(identity, first);
-
-    for (unsigned int i = 1 ; i < input_size ; i++) {
-        MyInt4 x = mapped[i];
-        MyInt4 y = scanned[i-1];
-        scanned[i] = CpuMsspOp::apply(y,x);
-    }
-
-    /*for (unsigned int i = 0; i < input_size ; i++) {
-        MyInt4 res = scanned[i];
-        printf("scanned[%d]: %d, %d, %d, %d\n", i, res.x, res.y, res.z, res.w);
-    }*/
-
-
-    int res = scanned[input_size-1].x;
-    free(mapped);
-    free(scanned);
-    return res;
-}
-
-int RandomNumber(int lower, int upper) {
-    return lower + rand() % (upper - lower + 1);
-}
-
-void mssCompare(int* input, unsigned long input_size) {
-    unsigned int block_size  = 512;
-    unsigned long num_threads = input_size;
-
-    unsigned long int elapsedGpu, elapsedCpu;
-
-    struct timeval t_start, t_end, t_diff;
-    gettimeofday(&t_start, NULL);
-    int gpuRes = gpuMss(input, num_threads, block_size);
-    gettimeofday(&t_end, NULL);
-    timeval_subtract(&t_diff, &t_end, &t_start);
-    elapsedGpu = (t_diff.tv_sec*1e6+t_diff.tv_usec);
-
-
-    gettimeofday(&t_start, NULL);
-    int cpuRes = cpuMss(input, num_threads);
-    gettimeofday(&t_end, NULL);
-    timeval_subtract(&t_diff, &t_end, &t_start);
-    elapsedCpu = (t_diff.tv_sec*1e6+t_diff.tv_usec);
-
-    if(gpuRes == cpuRes) {
-        printf("Results are VALID, execution times:\n");
-        printf(" - GPU runs in: %lu microsecs\n", elapsedGpu);
-        printf(" - CPU runs in: %lu microsecs\n", elapsedCpu);
-    } else {
-        printf("Results are INVALID (CPU: %d, GPU: %d) , execution times:\n",cpuRes, gpuRes);
-        //printf(" - GPU runs in: %lu microsecs\n", elapsedGpu);
-        //printf(" - CPU runs in: %lu microsecs\n", elapsedCpu);
-        printf("Input: ");
-        for (int i = 0 ; i < input_size ; i++) {
-            printf("%d, ", input[i]);
-        }
-        printf("\n");
-    }
-
-
-
-    //Print here.
-
-    return;
-}
-
-void mssTest(int iterations, int list_length) {
-
-    int* input = (int*) malloc(list_length * sizeof(int));
-
-    for(int i = 0 ; i < iterations ; i++) {
-
-        srand (time(NULL)); // Seed the damn generator.
-
-        for(int j = 0 ; j < list_length ; j++) {
-            input[j] = RandomNumber(0,100);
-            //printf("Generated: %d\n", input[j]);
-        }
-        mssCompare(input, list_length);
-    }
-
-    free(input);
-}
-
-
 
 int main(int argc, char** argv) {
     //scanIncTest(true);
     //scanIncTest(true);
     //scanIncTest(false);
-
-    mssTest(10, 10000000);
 }

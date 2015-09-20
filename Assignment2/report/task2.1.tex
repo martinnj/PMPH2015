@@ -3,7 +3,7 @@
 Assuming a 5-stage pipeline design as described in \cite{l3InOrder} and given
 the program in Figure \ref{fig:t21code} 5 questions (a-e) need to be answered.
 
-\begin{figure}[ht]
+\begin{figure}
     \begin{lstlisting}[language={[x86masm]Assembler}]
     SEARCH:     LW R5, 0(R3)        /I1 Load item
                 SUB R6, R5, R2      /I2 compare with key
@@ -18,7 +18,7 @@ the program in Figure \ref{fig:t21code} 5 questions (a-e) need to be answered.
 
 \subsection{a) Inserting NOOPS}
 
-\begin{figure}[ht]
+\begin{figure}
     \begin{lstlisting}[language={[x86masm]Assembler}]
     SEARCH:     LW R5, 0(R3)        /I1 Load item
                 NOP
@@ -52,6 +52,26 @@ the program in Figure \ref{fig:t21code} 5 questions (a-e) need to be answered.
     \item[No Hit: ] Table \ref{tab:t21bmiss} shows  the execution of the code, the
     last execution step finishes at clock 17.
 \end{itemize}
+
+\subsection{c) Execution time (clocks) with stalling and register forwarding}
+\begin{itemize}
+    \item[Hit: ] Table \ref{tab:t21chit} shows  the execution of the code, the
+    last execution step finishes at clock 11.
+
+    \item[No Hit: ] Table \ref{tab:t21cmiss} shows  the execution of the code, the
+    last execution step finishes at clock 12.
+\end{itemize}
+
+\subsection{d) Execution time (clocks) with stalling and full forwarding}
+\begin{itemize}
+    \item[Hit: ] Table \ref{tab:t21dhit} shows  the execution of the code, the
+    last execution step finishes at clock 9.
+
+    \item[No Hit: ] Table \ref{tab:t21dmiss} shows  the execution of the code, the
+    last execution step finishes at clock 10.
+\end{itemize}
+
+
 
 
 \begin{landscape}
@@ -88,16 +108,6 @@ the program in Figure \ref{fig:t21code} 5 questions (a-e) need to be answered.
     \end{table}
 \end{landscape}
 
-
-\subsection{c) Execution time (clocks) with stalling and register forwarding}
-\begin{itemize}
-    \item[Hit: ] Table \ref{tab:t21chit} shows  the execution of the code, the
-    last execution step finishes at clock 11.
-
-    \item[No Hit: ] Table \ref{tab:t21cmiss} shows  the execution of the code, the
-    last execution step finishes at clock 12.
-\end{itemize}
-
 \begin{landscape}
 
     \begin{table}[]
@@ -133,18 +143,6 @@ the program in Figure \ref{fig:t21code} 5 questions (a-e) need to be answered.
     \end{table}
 
 \end{landscape}
-
-
-
-
-\subsection{d) Execution time (clocks) with stalling and full forwarding}
-\begin{itemize}
-    \item[Hit: ] Table \ref{tab:t21dhit} shows  the execution of the code, the
-    last execution step finishes at clock 9.
-
-    \item[No Hit: ] Table \ref{tab:t21dmiss} shows  the execution of the code, the
-    last execution step finishes at clock 10.
-\end{itemize}
 
 \begin{landscape}
     \begin{table}[]

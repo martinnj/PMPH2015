@@ -41,66 +41,6 @@ class MyInt4 {
     }
 };
 
-class MsspOp {
-  public:
-    typedef MyInt4 BaseType;
-    static __device__ inline MyInt4 identity() { return MyInt4(0,0,0,0); }
-    static __device__ inline MyInt4 apply(volatile MyInt4& t1, volatile MyInt4& t2) {
-        int mssx = t1.x;
-        int mssy = t2.x;
-        int misx = t1.y;
-        int misy = t2.y;
-        int mcsx = t1.z;
-        int mcsy = t2.z;
-        int tsx = t1.w;
-        int tsy = t2.w;
-
-        int mss = max(mssx, max(mssy, (mcsx + misy))); // (mss x) max (mss y) max ((mcs x) + (mis y))
-        int mis = max(misx, (tsx + tsy));              // (mis x) max ((ts x)+(mis y))
-        int mcs = max(mcsy, (tsy + mcsx));             // (mcs y) max ((ts y)+(mcs x))
-        int t   = tsx + tsy;                           // ts x + ts y
-        return MyInt4(mss, mis, mcs, t);
-    }
-
-private:
-    static __device__ int max(int x, int y) {
-        if(x >= y) { return x; }
-        return y;
-    }
-};
-
-class CpuMsspOp {
-  public:
-    typedef MyInt4 BaseType;
-    static inline MyInt4 identity() { return MyInt4(0,0,0,0); }
-    static inline MyInt4 apply(MyInt4& t1, MyInt4& t2) {
-        int mssx = t1.x;
-        int mssy = t2.x;
-        int misx = t1.y;
-        int misy = t2.y;
-        int mcsx = t1.z;
-        int mcsy = t2.z;
-        int tsx = t1.w;
-        int tsy = t2.w;
-
-        int mss = max(mssx, max(mssy, (mcsx + misy))); // (mss x) max (mss y) max ((mcs x) + (mis y))
-        int mis = max(misx, (tsx + tsy));              // (mis x) max ((ts x)+(mis y))
-        int mcs = max(mcsy, (tsy + mcsx));             // (mcs y) max ((ts y)+(mcs x))
-        int t   = tsx + tsy;                           // ts x + ts y
-        return MyInt4(mss, mis, mcs, t);
-    }
-};
-
-template<class T1, class T2>
-__global__ void
-MssMapKernel(T1* d_in, T2* d_out, const unsigned int d_size) {
-    const unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if(tid < d_size) {
-      T1 x = d_in[tid];
-      d_out[tid] = T2(x, x, x, x);
-    }
-}
-
 /***************************************/
 /*** Scan Inclusive Helpers & Kernel ***/
 /***************************************/
@@ -387,25 +327,9 @@ __global__ void
 sgmShiftRightByOne(T* d_in, int*flags, T* d_out, T ne, unsigned int d_size) {
     const unsigned int gid = blockIdx.x*blockDim.x + threadIdx.x;
     if(gid < d_size) {
-        // ... fill in the blanks ...
-    }
-}
-
-
-/**
- * This implements the map from MSSP:
- * inp_d    the original array (of ints)
- * inp_lift the result array, in which an integer x in inp_d
- *              should be transformed to MyInt4(x,x,x,x) if x > 0
- *                                and to MyInt4(0,0,0,x) otherwise
- * inp_size is the size of the original (and output) array
- *              in number of int (MyInt4) elements
- **/
-__global__ void
-msspTrivialMap(int* inp_d, MyInt4* inp_lift, int inp_size) {
-    const unsigned int gid = blockIdx.x*blockDim.x + threadIdx.x;
-    if(gid < inp_size) {
-        // ... fill in the blanks ...
+        int flag = flags[gid];
+        if (flag == 1) { d_out[gid] = ne; }
+        else { d_out[gid] = d_in[gid-1]; }
     }
 }
 

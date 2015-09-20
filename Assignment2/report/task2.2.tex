@@ -11,11 +11,11 @@ used:
     \item[\texttt{R4}] stores the address of the $x$ array offset with $k$.
     \item[\texttt{R5}] stores the address of the $y$ array offset with $k$.
     \item[\texttt{R6}] stores the address of the $p$ result array.
-    \item[\texttt{R7}] stores the address of the $p$ result array offset with $k$.
     \item[\texttt{R8}] stores the stride.
     \item[\texttt{R9}] stores a dot product of the two slices until copied away.
     \item[\texttt{R10}] stores the value 1023 for use in the loop counter.
-    \item[\texttt{R10}] stores an loop iteration counter.
+    \item[\texttt{R11}] stores an loop iteration counter.
+    \item[\texttt{R12}] stores address of the $p$ result array offset by the iteration counter.
     \item[\texttt{V1}] stores the retrieved slice of $x$.
     \item[\texttt{V2}] stores the retrieved slice of $y$.
 \end{itemize*}
@@ -28,7 +28,7 @@ states that we have  a multiplication pipline, however I am unsure if this is
 only capable of multiplying a scalar to each element in the vector or if it can
 do dot- or cross-products as well.
 
-\begin{figure}[ht]
+\begin{figure}
     % R1  = k
     % R2  = &x
     % R3  = &y

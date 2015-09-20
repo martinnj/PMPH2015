@@ -1,1 +1,60 @@
 \section{Task I: CUDA}
+
+\subsection{a) Exclusive Scan}
+\todo[inline]{Finish implementation and report results.}
+
+\subsection{b) Maximum Segment Sum}
+
+The solution to the task can be found in the \textit{src/mss} folder and
+contains a makefile that supports the \texttt{compile}, \texttt{run},
+\texttt{clean} options.
+
+As ofr the run time, when the list of integers reach a length of approximately
+10.000 elements the CPU and GPU takes almost the same time to complete the
+calculation (CPU: 650 microseconds, GPU: 750 microseconds). When using the
+\texttt{make run} command, the program will run a number of tests of the mss
+code with varying input lengths and report the time taken. The times include the
+time taken to copy the input from the host to the device.
+
+\subsection{c) Sparse Matrix Multiplication}
+
+The current partial solution to this task can be found in the
+\textit{src/matrixmul} folder. The code can be run by using
+\texttt{\$ runhaskell PrimesQuicksort.hs}. The code for producin the results
+can be seen in the aformentioned file or in Figure \ref{fig:t1c1code} and Figure
+\ref{fig:t1c2code}.
+
+Unfortunately I did not have time to make the implementation in Haskell
+completely flat (\texttt{foo} and \texttt{bar} uses nesting) and also have not
+made the C++ implementation.
+
+\begin{figure}
+    \begin{lstlisting}
+nestSparseMatVctMult :: [[(Int,Double)]] -> [Double] -> [Double]
+nestSparseMatVctMult mat x =
+    map (\row ->  sum $ (map (\(i,n) -> n*(x!!i)) row) ) mat
+    \end{lstlisting}
+    \caption{Nested implementation of sparse matrix and vector multiplication.}
+    \label{fig:t1c1code}
+\end{figure}
+
+\begin{figure}
+    \begin{lstlisting}
+flatSparseMatVctMult :: [Int] -> [(Int,Double)] -> [Double] -> [Double]
+flatSparseMatVctMult flags mat x =
+    let tot_num_elems = length flags
+        vct_len       = length x
+        row_ids = map ( \x -> x-1 ) $ scanInc (+) 0 flags -- = [0,0,1,1,1,2,2,2,3,3]
+        is = iota (tot_num_elems)
+        components = map ( \i -> (snd $ mat!!i) * (x!!(fst $ mat!!i)) ) is
+        comzipped = zip row_ids components
+        vis = iota (vct_len)
+        -- not flat from here :(
+        foo = map ( \i -> filter ( \(x,_) -> x == i ) comzipped ) vis
+        bar = map ( \x -> sum $ map (\y -> snd y) x ) foo
+    in  bar
+    \end{lstlisting}
+    \caption{Attempt at a flat implementation of sparse matrix and vector
+    multiplication.}
+    \label{fig:t1c2code}
+\end{figure}
