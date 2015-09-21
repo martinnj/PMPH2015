@@ -54,9 +54,9 @@ elss p xs =
                 where
                   connect = p [lastx,firsty]
                   newlss  = lssx `max` lssy `max` (if connect then lcsx+lisy else 0)
-                  newlis  = lisx `max` (if connect then (tlx+lisy) else 0)
-                  newlcs  = lcsy `max` (if connect then (tly+lcsx) else 0)
-                  newok   = okx && oky
+                  newlis  = lisx `max` (if (connect && okx) then (tlx+lisy) else 0) -- Fixed?
+                  newlcs  = lcsy `max` (if (connect && oky) then (tly+lcsx) else 0) -- Fixed?
+                  newok   = if connect then okx && oky else False -- Fixed?
         f x = (xmatch, xmatch, xmatch, 1, x, x, p [x])
                   where xmatch = if (p [x]) then 1 else 0
     in ((reduce lssop (0,0,0,0,0,0,True)) . (map f)) xs
