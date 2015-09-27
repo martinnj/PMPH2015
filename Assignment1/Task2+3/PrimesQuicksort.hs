@@ -1,5 +1,6 @@
 import System.Environment -- access to arguments etc.
 import Data.Bits
+import Data.List
 import Debug.Trace
 
 import System.IO.Unsafe  -- be careful!
@@ -203,88 +204,44 @@ flatQuicksort ne sizes arr =
 ---                                               ---
 --- IF YOU GET IT RIGHT flatQuicksort should WORK!---
 -----------------------------------------------------
-
 segmSpecialFilter :: (a->Bool) -> [Int] -> [a] -> ([Int],[a])
-segmSpecialFilter cond sizes arr = let
-    segLengths = filter (\x -> x /= 0) sizes -- TODO: Can parFilter be used?
-    segments = splitter segLengths arr
-    (resArr, resSizes) = unzip $ map (parFilter cond) segments
-    res1 = reduce (++) [] resArr
-    res2 = reduce (++) [] resSizes
-    in (res2,res1)
-    where
-        -- Helper function to split list into segments.
-        splitter :: [Int] -> [a] -> [[a]]
-        splitter [l] xs = let
-            (l1, l2) = splitAt l xs
-            in [l1]
-        splitter (l:ls) xs = let
-            (l1, l2) = splitAt l xs
-            in l1 : (splitter ls l2)
+segmSpecialFilter cond sizes arr =
+    let n   = length arr
+        cs  = map cond arr
+        tfs = map (\f -> if f then 1
+                         else 0) cs
 
------------------------------------------------------
---- ASSIGNMENT 1: implement sparse matrix-vector  ---
----    TASK 4a.   multiplication with nested      ---
----               parallelism \& test it!         ---
----               Matrix:                         ---
----              [ 2.0, -1.0,  0.0, 0.0]          ---
----              [-1.0,  2.0, -1.0, 0.0]          ---
----              [ 0.0, -1.0,  2.0,-1.0]          ---
----              [ 0.0,  0.0, -1.0, 2.0]          ---
----                                               ---
----              IS REPRESENTED AS a list of lists---
----                in which the outer list has the---
----                same number of elements as the ---
----                number of rows of the matrix.  ---
----                However, each row is represented--
----                as a sparse list that pairs up ---
----                each non-zero element with its ---
----                column index, as below:        ---
----                                               ---
----              [ [(0,2.0),  (1,-1.0)],          ---
----                [(0,-1.0), (1, 2.0), (2,-1.0)],---
----                [(1,-1.0), (2, 2.0), (3,-1.0)],---
----                [(2,-1.0), (3, 2.0)]           ---
----              ]                                ---
----               The vector is full and matches  ---
----               the matrix number of columns,   ---
----               e.g., x = [2.0, 1.0, 0.0, 3.0]  ---
----                     (transposed)              ---
----    ALSO LOOK WHERE IT IS FUNCTION IS CALLED   ---
------------------------------------------------------
+        ffs = map (\f->if f then 0
+                            else 1) cs
 
-nestSparseMatVctMult :: [[(Int,Double)]] -> [Double] -> [Double]
-nestSparseMatVctMult mat x =
-    map (\row -> let (inds,vals) = unzip row
-                     yi = 0.0 -- implement who yi should be!
-                 in  yi
-            ----------------------------------------------
-            --- Pseudocode:                            ---
-            ---   yi := 0;                             ---
-            ---   for(j = 0; j < length inds; j++)     ---
-            ---       yi := yi + vals[j] * x[ inds[j] ]---
-            ----------------------------------------------
-        ) mat
+        isT = segmScanInc (+) 0 sizes tfs
+
+        isF = segmScanInc (+) 0 sizes ffs
+
+        acc_sizes = scanInc (+) 0 sizes
+
+        is = map (\s -> isT !! (s - 1)) acc_sizes
+        si  = segmScanInc (+) 0 sizes sizes
+
+        offsets = zipWith (-) acc_sizes si
+
+        inds = map (\ (c,i,o,iT,iF) -> if c then iT+o-1 else iF+i+o-1 )
+                    (zip5 cs is offsets isT isF)
+
+        tmp1 = map (\m -> iota m) sizes
+        iotas = map (+1) $ reduce (++) [] tmp1
+
+        flags = map (\(f,i,s,ri) -> if f > 0
+                                    then (if ri > 0
+                                          then ri
+                                          else f)
+                                    else (if (i-1) == ri
+                                          then s-ri
+                                          else 0)) (zip4 sizes iotas si is)
+
+    in  (flags, permute inds arr)
 
 
------------------------------------------------------------
---- ASSIGNMENT 1: implement sparse matrix-vector        ---
----    TASK 4b.   multiplication with flat parallelism! ---
----               Same matrix as before has a flat      ---
----               representation: flag vector (flags) & ---
----                               data vector (mat  )   ---
----    ALSO LOOK WHERE IT IS FUNCTION IS CALLED   ---
------------------------------------------------------------
-
-flatSparseMatVctMult :: [Int] -> [(Int,Double)] -> [Double] -> [Double]
-flatSparseMatVctMult flags mat x =
-    let tot_num_elems = length flags
-        vct_len       = length x
-        --------------------------------
-        --- Implementation Here      ---
-        --- Figure it out!           ---
-        --------------------------------
-    in  x
 
 ----------------------------------------
 --- MAIN                             ---
@@ -300,14 +257,6 @@ main = do args <- getArgs
               vals = [33,33,33,33]
               inds = [0,2,4,6]
               winp = write inds vals inp
-              matrix_nest = [ [(0,2.0),  (1,-1.0)],
-                              [(0,-1.0), (1, 2.0), (2,-1.0)],
-                              [(1,-1.0), (2, 2.0), (3,-1.0)],
-                              [(2,-1.0), (3, 2.0)]
-                            ]
-              matrix_flag = [1,       0,        1,        0,        0,        1,        0,        0,        1,         0      ]
-              matrix_flat = [(0,2.0), (1,-1.0), (0,-1.0), (1, 2.0), (2,-1.0), (1,-1.0), (2, 2.0), (3,-1.0), (2,-1.0), (3, 2.0)]
-              x_vector    = [2.0, 1.0, 0.0, 3.0]
 
           putStrLn ("Input list: "++show inp)
           putStrLn ("Input flags:"++show sizes)
@@ -324,6 +273,3 @@ main = do args <- getArgs
           putStrLn ("PrimesFlat 9: " ++ show (primesFlat 9))
           putStrLn ("NestQuicksort inp: " ++ show (nestedQuicksort inp))
           putStrLn ("FlatQuicksort inp: " ++ show (flatQuicksort 0 (inpL:(replicate (inpL-1) 0)) inp))
-
-          putStrLn ("Nested SparseMatrixMult: " ++ show (nestSparseMatVctMult matrix_nest x_vector))
-          putStrLn ("Flat   SparseMatrixMult: " ++ show (flatSparseMatVctMult matrix_flag matrix_flat x_vector))
