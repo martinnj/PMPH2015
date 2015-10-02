@@ -1,1 +1,107 @@
 \section{Task 3: Dense Matrix Multiplication}
+The code for this assignment can be found in the \textit{src/Task3} folder
+handed in with this report. All functions (where applicable) have been templated
+so the datatype contianed in the matrices can be any class \texttt{T}.
+
+The code ships with a make file that supports the \texttt{clean},
+\texttt{compile} and \texttt{run} targets. The current setup of the file will
+run both GPU kernels on an assymetric matrix and compare to the CPU runs.
+
+\subsection{Task 3.a: Sequential CPU Code}
+The code for this task is mainly found in the \textit{cpuFunc.cu.h} file, like
+earlier it contains a number of convinience functions as well as the
+multiplication function \texttt{flatMatrixMultiply}.
+
+\subsection{Task 3.c: Naive GPU Code}
+The code for this task is found in the \textit{gpuFunc.cu.h} file, it contains
+the same convinience functions as earlier, but the kernel is now replaced with
+\texttt{flatNaiveMutliplyKernel}, which is a naive matrix multiplication kernel.
+
+\subsection{Task 3.d: Shared-Memory GPU Code}
+The code for this task is found in the \textit{gpuFunc.cu.h} file, the
+shared-memory kernel is implemented in the function
+\texttt{flatSharedMultiplyKernel}.
+
+\subsection{Runningtimes}
+
+
+nvcc -arch=compute_20 -o task3 task3.cu
+./task3
+
+==========================================
+======= MATRIX MULTIPLICATION TEST =======
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[10,10], B[10,10], C[10,10].
+
+All results are VALID.
+
+Average CPU runtime        : 10 microseconds.
+Average GPU naive runtime  : 8 microseconds.
+Average GPU shared runtime : 7 microseconds.
+
+==========================================
+======= MATRIX MULTIPLICATION TEST =======
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[20,20], B[20,20], C[20,20].
+
+All results are VALID.
+
+Average CPU runtime        : 85 microseconds.
+Average GPU naive runtime  : 7 microseconds.
+Average GPU shared runtime : 7 microseconds.
+
+==========================================
+======= MATRIX MULTIPLICATION TEST =======
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[30,30], B[30,30], C[30,30].
+
+All results are VALID.
+
+Average CPU runtime        : 272 microseconds.
+Average GPU naive runtime  : 8 microseconds.
+Average GPU shared runtime : 7 microseconds.
+
+==========================================
+======= MATRIX MULTIPLICATION TEST =======
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[40,40], B[40,40], C[40,40].
+
+All results are VALID.
+
+Average CPU runtime        : 635 microseconds.
+Average GPU naive runtime  : 8 microseconds.
+Average GPU shared runtime : 7 microseconds.
+
+==========================================
+======= MATRIX MULTIPLICATION TEST =======
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[50,50], B[50,50], C[50,50].
+
+All results are VALID.
+
+Average CPU runtime        : 1228 microseconds.
+Average GPU naive runtime  : 8 microseconds.
+Average GPU shared runtime : 7 microseconds.
+
+==========================================
+======= MATRIX MULTIPLICATION TEST =======
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[60,60], B[60,60], C[60,60].
+
+All results are VALID.
+
+Average CPU runtime        : 2107 microseconds.
+Average GPU naive runtime  : 8 microseconds.
+Average GPU shared runtime : 8 microseconds.

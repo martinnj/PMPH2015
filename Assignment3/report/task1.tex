@@ -41,22 +41,7 @@ task:
 
 In the \texttt{main} part of the \textit{task1.cu} file, there is a region that
 contains tests I used to find where the CPU transpose starts being slower than
-the GPU transpose. The timings are listed in Table \ref{tab:task1c}, and include
-the time it takes to copy to and from device memory.
-
-\begin{table}
-    \begin{tabular}{|l|l|l|}
-        \hline
-        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{GPU Time} \\\hline
-        2500 &  $74.76$ms & $154.19$ms \\
-        2600 & $153.72$ms & $181.48$ms \\
-        2700 & $240.23$ms & $210.95$ms \\
-        3000 & $352.25$ms & $248.06$ms \\\hline
-    \end{tabular}
-    \caption{The running times for the CPU and GPU code as the average over 10
-    runs.}
-    \label{tab:task1c}
-\end{table}
+the GPU transpose. The timings are listed in Table \ref{tab:task1time}.
 
 
 \subsection{Task 1.d: Shared-Memory GPU Code}
@@ -76,23 +61,72 @@ For this task additional code is implemented in \textit{task1.cu} and
     \end{itemize*}
 \end{itemize}
 
-Table \ref{tab:task1d} shows the running times of the CPU code and the
-Shared-Memory GPU kernel. Time time is done for 10 runs of each method and the
+Table \ref{tab:task1time} shows the running times of the CPU code and the
+Shared-Memory GPU kernel. Time time is done for 1000 runs of each method and the
 time represents the average time for a single run.
 
 \begin{table}
-    \begin{tabular}{|l|l|l|}
+    \begin{tabular}{|l|l|l|l|}
         \hline
         \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{GPU Time} \\\hline
-        2500 &  $73.39$ms & $145.95$ms \\
-        2600 & $142.88$ms & $172.93$ms \\
-        2700 & $213.12$ms & $201.41$ms \\
-        3000 & $299.87$ms & $236.14$ms \\\hline
+
     \end{tabular}
     \caption{The running times for the CPU and GPU code as the average over 10
     runs.}
     \label{tab:task1d}
 \end{table}
 
-Looking at the timings from Table \ref{tab:task1c} and Table \ref{tab:task1d} we
-can see that the shared-memory code is slightly faster than the naive code.
+nvcc -arch=compute_20 -o task1 task1.cu
+./task1
+
+==========================================
+========== MATRIX TRANSPOSE TEST =========
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[10,10].
+
+All results are VALID.
+
+Average CPU runtime        : 0 microseconds.
+Average GPU naive runtime  : 7 microseconds.
+Average GPU shared runtime : 7 microseconds.
+
+==========================================
+========== MATRIX TRANSPOSE TEST =========
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[50,50].
+
+All results are VALID.
+
+Average CPU runtime        : 9 microseconds.
+Average GPU naive runtime  : 8 microseconds.
+Average GPU shared runtime : 7 microseconds.
+
+==========================================
+========== MATRIX TRANSPOSE TEST =========
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[100,100].
+
+All results are VALID.
+
+Average CPU runtime        : 37 microseconds.
+Average GPU naive runtime  : 9 microseconds.
+Average GPU shared runtime : 8 microseconds.
+
+==========================================
+========== MATRIX TRANSPOSE TEST =========
+==========================================
+Configuration:
+ - # of runs: 1000
+ - Matrix dimensions: A[250,250].
+
+All results are VALID.
+
+Average CPU runtime        : 231 microseconds.
+Average GPU naive runtime  : 11 microseconds.
+Average GPU shared runtime : 9 microseconds.
