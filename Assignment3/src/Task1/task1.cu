@@ -35,8 +35,6 @@ unsigned long int cpuTranspose(T* A, T* B, int M, int N) {
 
 template<class T>
 unsigned long int gpuSharedTranspose(T* A, T* B, int M, int N) {
-    struct timeval t_start, t_end, t_diff;
-    gettimeofday(&t_start, NULL);
 
     T* d_A = flatMatrixCudaMalloc<T>(M, N);
     T* d_B = flatMatrixCudaMalloc<T>(N, M);
@@ -48,85 +46,23 @@ unsigned long int gpuSharedTranspose(T* A, T* B, int M, int N) {
     int blocks_Y = ceil(N/(float)threadsPerBlock.y);
     dim3 numBlocks(blocks_X, blocks_Y);
 
-    //printf("numBlocks(%d, %d);\n",blocks_X, blocks_Y);
-
+    struct timeval t_start, t_end, t_diff;
+    gettimeofday(&t_start, NULL);
 
     flatSharedTransposeKernel<T> <<<numBlocks , threadsPerBlock>>>(d_A, d_B, M, N);
+
+    gettimeofday(&t_end, NULL);
+    timeval_subtract(&t_diff, &t_end, &t_start);
+
     flatMatrixDeviceToHost<T>(B, d_B, M, N);
 
     flatmatrixCudaFree<T>(d_A);
     flatmatrixCudaFree<T>(d_B);
-
-    gettimeofday(&t_end, NULL);
-    timeval_subtract(&t_diff, &t_end, &t_start);
     return (t_diff.tv_sec*1e6+t_diff.tv_usec);
-}
-
-void sharedTransposeTest(int iterations, int M, int N) {
-    printf("\n");
-    printf("==========================================\n");
-    printf("========== SHARED TRANSPOSE TEST =========\n");
-    printf("==========================================\n");
-    printf("Configuration:\n");
-    printf(" - # of runs: %d\n", iterations);
-    printf(" - Matrix dimensions: [%d,%d]\n\n", M, N);
-
-    unsigned long int cpu_time;
-    unsigned long int gpu_time;
-    int valid_count = 0;
-    int invalid_count = 0;
-
-    float* cpu_A = flatMatrixCreate<float>(M,N, 0.0);
-    float* gpu_A = flatMatrixCreate<float>(M,N, 0.0);
-    for(int i = 0 ; i < M ; i++) {
-        for(int j = 0 ; j < N ; j++) {
-            cpu_A[i*N+j] = i*N+j + 1.0;
-            gpu_A[i*N+j] = i*N+j + 1.0;
-        }
-    }
-
-    for(int i = 0 ; i < iterations ; i++) {
-        float* cpu_B = flatMatrixCreate<float>(N,M, -1.0);
-        float* gpu_B = flatMatrixCreate<float>(N,M, -1.0);
-
-        //flatMatrixPrint(cpu_A, M ,N);
-        //flatMatrixPrint(gpu_A, M ,N);
-
-        cpu_time += cpuTranspose<float>(cpu_A, cpu_B, M, N);
-        gpu_time += gpuSharedTranspose<float>(gpu_A, gpu_B, M, N);
-
-        bool valid = flatMatrixCompare<float>(cpu_B, gpu_B, M, N);
-        if(valid) { valid_count++; }
-        else {
-            invalid_count++;
-            //flatMatrixPrint(cpu_B, M, N);
-            //flatMatrixPrint(gpu_B, M, N);
-        }
-
-        flatMatrixFree<float>(cpu_B);
-        flatMatrixFree<float>(gpu_B);
-    }
-
-    flatMatrixFree<float>(cpu_A);
-    flatMatrixFree<float>(gpu_A);
-
-    unsigned long int cpu_average = cpu_time / iterations; // average runtime in microseconds
-    unsigned long int gpu_average = gpu_time / iterations;
-
-    if(invalid_count > 0) {
-        printf("INVALID results where found. # of invalid results: %d\n", invalid_count);
-    } else {
-        printf("All results were VALID.\n");
-    }
-    printf("\n");
-    printf("Average CPU runtime: %.2f ms\n", cpu_average/1000.0);
-    printf("Average GPU runtime: %.2f ms\n", gpu_average/1000.0);
 }
 
 template<class T>
 unsigned long int gpuNaiveTranspose(T* A, T* B, int M, int N) {
-    struct timeval t_start, t_end, t_diff;
-    gettimeofday(&t_start, NULL);
 
     T* d_A = flatMatrixCudaMalloc<T>(M, N);
     T* d_B = flatMatrixCudaMalloc<T>(M, N);
@@ -138,99 +74,109 @@ unsigned long int gpuNaiveTranspose(T* A, T* B, int M, int N) {
     int blocks_Y = ceil(N/(float)threadsPerBlock.y);
     dim3 numBlocks(blocks_X, blocks_Y);
 
-    //printf("numBlocks(%d, %d);\n",blocks_X, blocks_Y);
-
+    struct timeval t_start, t_end, t_diff;
+    gettimeofday(&t_start, NULL);
 
     flatNaiveTransposeKernel<T> <<<numBlocks , threadsPerBlock>>>(d_A, d_B, M, N);
+
+    gettimeofday(&t_end, NULL);
+    timeval_subtract(&t_diff, &t_end, &t_start);
+
     flatMatrixDeviceToHost<T>(B, d_B, M, N);
 
     flatmatrixCudaFree<T>(d_A);
     flatmatrixCudaFree<T>(d_B);
-
-    gettimeofday(&t_end, NULL);
-    timeval_subtract(&t_diff, &t_end, &t_start);
     return (t_diff.tv_sec*1e6+t_diff.tv_usec);
 }
 
 
-void naiveTransposeTest(int iterations, int M, int N) {
+void allTransposeTest(int iterations, int M, int N) {
     printf("\n");
     printf("==========================================\n");
-    printf("========== NAIVE TRANSPOSE TEST ==========\n");
+    printf("========== MATRIX TRANSPOSE TEST =========\n");
     printf("==========================================\n");
     printf("Configuration:\n");
     printf(" - # of runs: %d\n", iterations);
-    printf(" - Matrix dimensions: [%d,%d]\n\n", M, N);
+    printf(" - Matrix dimensions: A[%d,%d].\n\n", M, N);
 
-    unsigned long int cpu_time;
-    unsigned long int gpu_time;
-    int valid_count = 0;
-    int invalid_count = 0;
+    unsigned long int cpu_time  = 0;
+    unsigned long int gpu1_time = 0;
+    unsigned long int gpu2_time = 0;
+    int valid_count1 = 0;
+    int invalid_count1 = 0;
+    int valid_count2 = 0;
+    int invalid_count2 = 0;
 
     float* cpu_A = flatMatrixCreate<float>(M,N, 0.0);
-    float* gpu_A = flatMatrixCreate<float>(M,N, 0.0);
-    for(int i = 0 ; i < M ; i++) {
-        for(int j = 0 ; j < N ; j++) {
-            cpu_A[i*N+j] = i*N+j + 1.0;
-            gpu_A[i*N+j] = i*N+j + 1.0;
-        }
+    float* gpu1_A = flatMatrixCreate<float>(M,N, 0.0);
+    float* gpu2_A = flatMatrixCreate<float>(M,N, 0.0);
+
+    for(int i = 0 ; i < M*N ; i++) {
+        cpu_A[i] = i + 1.0;
+        gpu1_A[i] = i + 1.0;
+        gpu2_A[i] = i + 1.0;
     }
 
     for(int i = 0 ; i < iterations ; i++) {
         float* cpu_B = flatMatrixCreate<float>(N,M, -1.0);
-        float* gpu_B = flatMatrixCreate<float>(N,M, -1.0);
-
-        //flatMatrixPrint(cpu_A, M ,N);
-        //flatMatrixPrint(gpu_A, M ,N);
+        float* gpu1_B = flatMatrixCreate<float>(N,M, -1.0);
+        float* gpu2_B = flatMatrixCreate<float>(N,M, -1.0);
 
         cpu_time += cpuTranspose<float>(cpu_A, cpu_B, M, N);
-        gpu_time += gpuNaiveTranspose<float>(gpu_A, gpu_B, M, N);
+        gpu1_time += gpuNaiveTranspose<float>(gpu1_A, gpu1_B, M, N);
+        gpu2_time += gpuSharedTranspose<float>(gpu2_A, gpu2_B, M, N);
 
-        bool valid = flatMatrixCompare<float>(cpu_B, gpu_B, M, N);
-        if(valid) { valid_count++; }
+        bool valid1 = flatMatrixCompare<float>(cpu_B, gpu1_B, N,M);
+        bool valid2 = flatMatrixCompare<float>(cpu_B, gpu2_B, N,M);
+        if(valid1) { valid_count1++; }
         else {
-            invalid_count++;
-            //flatMatrixPrint(cpu_B, M, N);
-            //flatMatrixPrint(gpu_B, M, N);
+            invalid_count1++;
+            printf("\nERROR - NAIVE COMPARE:\n");
+            flatMatrixPrint(cpu_B, N, M);
+            flatMatrixPrint(gpu1_B, N, M);
+        }
+
+
+        if(valid2) { valid_count2++; }
+        else {
+            invalid_count2++;
+            printf("\nERROR - SHARED COMPARE:\n");
+            flatMatrixPrint(cpu_B, N, M);
+            flatMatrixPrint(gpu2_B, N, M);
         }
 
         flatMatrixFree<float>(cpu_B);
-        flatMatrixFree<float>(gpu_B);
+        flatMatrixFree<float>(gpu1_B);
+        flatMatrixFree<float>(gpu2_B);
     }
 
     flatMatrixFree<float>(cpu_A);
-    flatMatrixFree<float>(gpu_A);
+    flatMatrixFree<float>(gpu1_A);
+    flatMatrixFree<float>(gpu2_A);
 
     unsigned long int cpu_average = cpu_time / iterations; // average runtime in microseconds
-    unsigned long int gpu_average = gpu_time / iterations;
+    unsigned long int gpu1_average = gpu1_time / iterations;
+    unsigned long int gpu2_average = gpu2_time / iterations;
 
-    if(invalid_count > 0) {
-        printf("INVALID results where found. # of invalid results: %d\n", invalid_count);
+    if (invalid_count1 < 1 && invalid_count2 < 1) {
+        printf("All results are VALID.\n");
     } else {
-        printf("All results were VALID.\n");
+        printf("INVALID naive results : %d\n", invalid_count1);
+        printf("INVALID shared results: %d\n", invalid_count2);
     }
+
     printf("\n");
-    printf("Average CPU runtime: %.2f ms\n", cpu_average/1000.0);
-    printf("Average GPU runtime: %.2f ms\n", gpu_average/1000.0);
+    printf("Average CPU runtime        : %d microseconds.\n", cpu_average);
+    printf("Average GPU naive runtime  : %d microseconds.\n", gpu1_average);
+    printf("Average GPU shared runtime : %d microseconds.\n", gpu2_average);
 }
 
 int main(int argc, char** argv) {
 
-    // Shows where naive GPU overtakes CPU.
-    // naiveTransposeTest(10, 2500, 2500);
-    // naiveTransposeTest(10, 2600, 2600);
-    // naiveTransposeTest(10, 2700, 2700);
-    // naiveTransposeTest(10, 3000, 3000);
-
-    // Shows where shared-memory GPU overtakes CPU.
-    // sharedTransposeTest(10, 2500, 2500);
-    // sharedTransposeTest(10, 2600, 2600);
-    // sharedTransposeTest(10, 2700, 2700);
-    // sharedTransposeTest(10, 3000, 3000);
-
-    // Odd matrix sizes.
-    naiveTransposeTest(10, 100, 4000);
-    sharedTransposeTest(10, 100, 4000);
+    allTransposeTest(1000, 10, 10);
+    allTransposeTest(1000, 50, 50);
+    allTransposeTest(1000, 100, 100);
+    allTransposeTest(1000, 250, 250);
 
     return 0;
 }

@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 
 // Flat Matrix Offset
-__global__ int fmo(int row, int col, int matrixWidth) {
+__device__ int gpuFmo(int row, int col, int matrixWidth) {
     return row * matrixWidth + col;
 }
 
@@ -15,9 +15,9 @@ __global__ void flatNaiveMutliplyKernel(T* A, T* B, T* C, int M, int N, int U) {
     if((i < M) && (j < N)) {
         float tmp = 0.0;
         for (int k = 0 ; k < U ; k++) { // Sequential loop
-            tmp = tmp + A[fmo(i,k,U)] * B[fmo(k,j,N)];
+            tmp = tmp + A[gpuFmo(i,k,U)] * B[gpuFmo(k,j,N)];
         }
-        C[fmo(i,j,U)] = tmp;
+        C[gpuFmo(i,j,U)] = tmp;
     }
 }
 
@@ -32,10 +32,10 @@ __global__ void flatSharedMultiplyKernel(T* A, T* B, T* C, int M, int N, int U) 
         s[tid] = 0.0;
         __syncthreads();
         for (int k = 0 ; k < U ; k++) { // Sequential loop
-            s[tid] = s[tid] + A[fmo(i,k,U)] * B[fmo(k,j,N)];
+            s[tid] = s[tid] + A[gpuFmo(i,k,U)] * B[gpuFmo(k,j,N)];
             __syncthreads();
         }
-        C[fmo(i,j,U)] = s[tid];
+        C[gpuFmo(i,j,U)] = s[tid];
     } else {
         __syncthreads();
         for (int k = 0 ; k < U ; k++) { // We still need to sync as many times
