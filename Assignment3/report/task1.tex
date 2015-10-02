@@ -1,1 +1,98 @@
-\section{Task 1}
+\section{Task 1: Matrix Transpose}
+The code for this assignment can be found in the \textit{src/Task1} folder
+handed in with this report. All functions (where applicable) have been templated
+so the datatype contianed in the matrices can be any class \texttt{T}.
+
+The code ships with a make file that supports the \texttt{clean},
+\texttt{compile} and \texttt{run} targets. The current setup of the file will
+run both GPU kernels on an assymetric matrix and compare to the CPU runs.
+
+\subsection{Task 1.a: Sequential CPU Code}
+The code for this subtask is implemented in the file \textit{cpuFunc.cu.h},
+there is not a whole lot of spectacular work going on, the file just contains
+convenience functions for creating, comparing and freeing matrices of specific
+sizes. The transpose function itself is implemented in
+\texttt{flatMatrixTranspose}.
+
+\subsection{Task 1.c: Naive GPU Code}
+The code for this subtask is implemented in \textit{gpuFunc.cu.h} as well as
+in \textit{task1.cu}. The following functions are implemented to solve this
+task:
+\begin{itemize}
+    \item \textit{gpuFunc.cu.h:}\begin{itemize*}
+        \item[\texttt{flatNaiveTransposeKernel}] The actual transpose kernel.
+        \item[\texttt{flatMatrixCudaMalloc}] Allocates device memory for a
+        matrix of a given size.
+        \item[\texttt{flatmatrixCudaFree}] Frees the device memory.
+        \item[\texttt{flatMatrixHostToDevice}] Copies a matrix from host- to
+        device memory.
+        \item[\texttt{flatMatrixDeviceToHost}] Copies a matrix from device- to
+        host memory.
+    \end{itemize*}
+
+    \item \textit{task1.cu}\begin{itemize*}
+        \item[\texttt{gpuNaiveTranspose}] Does the setup for a transepose and
+        calls the actual transpose kernel.
+        \item[\texttt{naiveTransposeTest}] Compares the results of the CPU
+        transpose and the GPU transpose as well as printing the result and how
+        long each call took on average.
+    \end{itemize*}
+\end{itemize}
+
+In the \texttt{main} part of the \textit{task1.cu} file, there is a region that
+contains tests I used to find where the CPU transpose starts being slower than
+the GPU transpose. The timings are listed in Table \ref{tab:task1c}, and include
+the time it takes to copy to and from device memory.
+
+\begin{table}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{GPU Time} \\\hline
+        2500 &  $74.76$ms & $154.19$ms \\
+        2600 & $153.72$ms & $181.48$ms \\
+        2700 & $240.23$ms & $210.95$ms \\
+        3000 & $352.25$ms & $248.06$ms \\\hline
+    \end{tabular}
+    \caption{The running times for the CPU and GPU code as the average over 10
+    runs.}
+    \label{tab:task1c}
+\end{table}
+
+
+\subsection{Task 1.d: Shared-Memory GPU Code}
+For this task additional code is implemented in \textit{task1.cu} and
+\textit{gpuFunc.cu.h}, the following methods we're implemented:
+\begin{itemize}
+    \item \textit{gpuFunc.cu.h:}\begin{itemize*}
+        \item[\texttt{flatSharedTransposeKernel}] The actual transpose kernel.
+    \end{itemize*}
+
+    \item \textit{task1.cu}\begin{itemize*}
+        \item[\texttt{gpuSharedTranspose}] Does the setup for a transepose and
+        calls the actual transpose kernel.
+        \item[\texttt{sharedTransposeTest}] Compares the results of the CPU
+        transpose and the GPU shared memory kernel and prints results and
+        running times.
+    \end{itemize*}
+\end{itemize}
+
+Table \ref{tab:task1d} shows the running times of the CPU code and the
+Shared-Memory GPU kernel. Time time is done for 10 runs of each method and the
+time represents the average time for a single run.
+
+\begin{table}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{GPU Time} \\\hline
+        2500 &  $73.39$ms & $145.95$ms \\
+        2600 & $142.88$ms & $172.93$ms \\
+        2700 & $213.12$ms & $201.41$ms \\
+        3000 & $299.87$ms & $236.14$ms \\\hline
+    \end{tabular}
+    \caption{The running times for the CPU and GPU code as the average over 10
+    runs.}
+    \label{tab:task1d}
+\end{table}
+
+Looking at the timings from Table \ref{tab:task1c} and Table \ref{tab:task1d} we
+can see that the shared-memory code is slightly faster than the naive code.
