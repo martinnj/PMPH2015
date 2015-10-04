@@ -1,1 +1,49 @@
 \section{Task 2}
+
+For this task we are given the following code:
+\begin{figure}
+    \begin{lstlisting}
+for i from 0 to N-1 // outer loop
+    accum = A[i,0] * A[i,0];
+    B[i,0] = accum;
+    for j from 1 to 63 // inner loop
+        tmpA = A[i, j];
+        accum = sqrt(accum) + tmpA*tmpA;
+        B[i,j] = accum;
+    \end{lstlisting}
+    \caption{Pseudocode given for the task.}
+    \label{fig:t2code1}
+\end{figure}
+
+\subsection{Task 2.a}
+
+\begin{itemize}
+    \item Because both \texttt{accum} and \texttt{tmpA} are declared outside the
+    loop, the outer loop cannot be parallel since the different threads will
+    attempt to write to the same memory locations.
+
+    \begin{figure}
+        \begin{lstlisting}
+for i from 0 to N-1 // outer loop
+    float accum = A[i,0] * A[i,0];
+    B[i,0] = accum;
+    for j from 1 to 63 // inner loop
+        float tmpA = A[i, j];
+        accum = sqrt(accum) + tmpA*tmpA;
+        B[i,j] = accum;
+        \end{lstlisting}
+        \caption{Code rewritten for allow for parallelisation of the outer
+            loop.}
+        \label{fig:t2code2}
+    \end{figure}
+
+    \item Since \texttt{accum} is declared outside the inner loop, it is not
+    parallelisable since different threads would all try to access the same
+    instance of \texttt{accum}.
+
+
+\end{itemize}
+
+
+\subsection{Task 2.c}
+\subsection{Task 2.d}

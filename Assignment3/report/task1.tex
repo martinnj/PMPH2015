@@ -20,20 +20,20 @@ in \textit{task1.cu}. The following functions are implemented to solve this
 task:
 \begin{itemize}
     \item \textit{gpuFunc.cu.h:}\begin{itemize*}
-        \item[\texttt{flatNaiveTransposeKernel}] The actual transpose kernel.
-        \item[\texttt{flatMatrixCudaMalloc}] Allocates device memory for a
+        \item \texttt{flatNaiveTransposeKernel} The actual transpose kernel.
+        \item \texttt{flatMatrixCudaMalloc} Allocates device memory for a
         matrix of a given size.
-        \item[\texttt{flatmatrixCudaFree}] Frees the device memory.
-        \item[\texttt{flatMatrixHostToDevice}] Copies a matrix from host- to
+        \item \texttt{flatmatrixCudaFree} Frees the device memory.
+        \item \texttt{flatMatrixHostToDevice} Copies a matrix from host- to
         device memory.
-        \item[\texttt{flatMatrixDeviceToHost}] Copies a matrix from device- to
+        \item \texttt{flatMatrixDeviceToHost} Copies a matrix from device- to
         host memory.
     \end{itemize*}
 
     \item \textit{task1.cu}\begin{itemize*}
-        \item[\texttt{gpuNaiveTranspose}] Does the setup for a transepose and
+        \item \texttt{gpuNaiveTranspose} Does the setup for a transepose and
         calls the actual transpose kernel.
-        \item[\texttt{naiveTransposeTest}] Compares the results of the CPU
+        \item \texttt{naiveTransposeTest} Compares the results of the CPU
         transpose and the GPU transpose as well as printing the result and how
         long each call took on average.
     \end{itemize*}
@@ -49,84 +49,41 @@ For this task additional code is implemented in \textit{task1.cu} and
 \textit{gpuFunc.cu.h}, the following methods we're implemented:
 \begin{itemize}
     \item \textit{gpuFunc.cu.h:}\begin{itemize*}
-        \item[\texttt{flatSharedTransposeKernel}] The actual transpose kernel.
+        \item \texttt{flatSharedTransposeKernel} The actual transpose kernel.
     \end{itemize*}
 
     \item \textit{task1.cu}\begin{itemize*}
-        \item[\texttt{gpuSharedTranspose}] Does the setup for a transepose and
+        \item \texttt{gpuSharedTranspose} Does the setup for a transepose and
         calls the actual transpose kernel.
-        \item[\texttt{sharedTransposeTest}] Compares the results of the CPU
+        \item \texttt{sharedTransposeTest} Compares the results of the CPU
         transpose and the GPU shared memory kernel and prints results and
         running times.
     \end{itemize*}
 \end{itemize}
 
+\subsection{Running times}
+
 Table \ref{tab:task1time} shows the running times of the CPU code and the
 Shared-Memory GPU kernel. Time time is done for 1000 runs of each method and the
-time represents the average time for a single run.
+time represents the average time for a single run. The times only cover the time
+spent in the calulation kernels, and does not cover the overhead for copying
+data to device memory.
 
 \begin{table}
-    \begin{tabular}{|l|l|l|l|}
+    \begin{tabular}{|r|r|r|r|}
         \hline
-        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{GPU Time} \\\hline
+        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{Naive GPU Time} & \textbf{Shared-Memory GPU Time}\\\hline
+        $10 \times  10$ & $ <0\mu s$ & $ 7\mu s$ & $7\mu s$ \\
+        $50 \times  50$ & $  9\mu s$ & $ 8\mu s$ & $7\mu s$ \\
+        $100\times 100$ & $ 37\mu s$ & $ 9\mu s$ & $8\mu s$ \\
+        $250\times 250$ & $231\mu s$ & $11\mu s$ & $9\mu s$ \\\hline
 
     \end{tabular}
-    \caption{The running times for the CPU and GPU code as the average over 10
+    \caption{The running times for the CPU and GPU code as the average over 1000
     runs.}
-    \label{tab:task1d}
+    \label{tab:task1time}
 \end{table}
 
-nvcc -arch=compute_20 -o task1 task1.cu
-./task1
-
-==========================================
-========== MATRIX TRANSPOSE TEST =========
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[10,10].
-
-All results are VALID.
-
-Average CPU runtime        : 0 microseconds.
-Average GPU naive runtime  : 7 microseconds.
-Average GPU shared runtime : 7 microseconds.
-
-==========================================
-========== MATRIX TRANSPOSE TEST =========
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[50,50].
-
-All results are VALID.
-
-Average CPU runtime        : 9 microseconds.
-Average GPU naive runtime  : 8 microseconds.
-Average GPU shared runtime : 7 microseconds.
-
-==========================================
-========== MATRIX TRANSPOSE TEST =========
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[100,100].
-
-All results are VALID.
-
-Average CPU runtime        : 37 microseconds.
-Average GPU naive runtime  : 9 microseconds.
-Average GPU shared runtime : 8 microseconds.
-
-==========================================
-========== MATRIX TRANSPOSE TEST =========
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[250,250].
-
-All results are VALID.
-
-Average CPU runtime        : 231 microseconds.
-Average GPU naive runtime  : 11 microseconds.
-Average GPU shared runtime : 9 microseconds.
+Table \ref{tab:task1time} shows that the CPU based code while very fast for the
+first small entry is quickly overtaken by both GPU kernels. Among the GPU
+kernels the Shared-Memory is the fastest.

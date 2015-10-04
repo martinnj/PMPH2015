@@ -24,84 +24,29 @@ shared-memory kernel is implemented in the function
 
 \subsection{Runningtimes}
 
+Table \ref{tab:task3time} shows the running times of the CPU code and the
+Shared-Memory GPU kernel. Time time is done for 1000 runs of each method and the
+time represents the average time for a single run. The times only cover the time
+spent in the calulation kernels, and does not cover the overhead for copying
+data to device memory.
 
-nvcc -arch=compute_20 -o task3 task3.cu
-./task3
+\begin{table}
+    \begin{tabular}{|r|r|r|r|}
+        \hline
+        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{Naive GPU Time} & \textbf{Shared-Memory GPU Time}\\\hline
+        $10 \times  10$ & $  10\mu s$ & $8\mu s$ & $7\mu s$ \\
+        $20 \times  20$ & $  85\mu s$ & $8\mu s$ & $7\mu s$ \\
+        $30 \times  30$ & $ 272\mu s$ & $8\mu s$ & $7\mu s$ \\
+        $40 \times  40$ & $ 635\mu s$ & $8\mu s$ & $7\mu s$ \\
+        $50 \times  50$ & $1228\mu s$ & $8\mu s$ & $7\mu s$ \\
+        $60 \times  60$ & $2107\mu s$ & $8\mu s$ & $7\mu s$ \\\hline
 
-==========================================
-======= MATRIX MULTIPLICATION TEST =======
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[10,10], B[10,10], C[10,10].
+    \end{tabular}
+    \caption{The running times for the CPU and GPU code as the average over 1000
+    runs.}
+    \label{tab:task3time}
+\end{table}
 
-All results are VALID.
-
-Average CPU runtime        : 10 microseconds.
-Average GPU naive runtime  : 8 microseconds.
-Average GPU shared runtime : 7 microseconds.
-
-==========================================
-======= MATRIX MULTIPLICATION TEST =======
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[20,20], B[20,20], C[20,20].
-
-All results are VALID.
-
-Average CPU runtime        : 85 microseconds.
-Average GPU naive runtime  : 7 microseconds.
-Average GPU shared runtime : 7 microseconds.
-
-==========================================
-======= MATRIX MULTIPLICATION TEST =======
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[30,30], B[30,30], C[30,30].
-
-All results are VALID.
-
-Average CPU runtime        : 272 microseconds.
-Average GPU naive runtime  : 8 microseconds.
-Average GPU shared runtime : 7 microseconds.
-
-==========================================
-======= MATRIX MULTIPLICATION TEST =======
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[40,40], B[40,40], C[40,40].
-
-All results are VALID.
-
-Average CPU runtime        : 635 microseconds.
-Average GPU naive runtime  : 8 microseconds.
-Average GPU shared runtime : 7 microseconds.
-
-==========================================
-======= MATRIX MULTIPLICATION TEST =======
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[50,50], B[50,50], C[50,50].
-
-All results are VALID.
-
-Average CPU runtime        : 1228 microseconds.
-Average GPU naive runtime  : 8 microseconds.
-Average GPU shared runtime : 7 microseconds.
-
-==========================================
-======= MATRIX MULTIPLICATION TEST =======
-==========================================
-Configuration:
- - # of runs: 1000
- - Matrix dimensions: A[60,60], B[60,60], C[60,60].
-
-All results are VALID.
-
-Average CPU runtime        : 2107 microseconds.
-Average GPU naive runtime  : 8 microseconds.
-Average GPU shared runtime : 8 microseconds.
+Table \ref{tab:task3time} shows that the CPU based code starts out slower than
+both the GPU kernels, it also shows that the shared-memory kernel have a lower
+runtime than the naive kernel.
