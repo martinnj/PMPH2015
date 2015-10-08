@@ -1,3 +1,25 @@
 \section{Task 1}
-\subsection{Task 1.a}
-\subsection{Task 1.b}
+\subsection{Task 1.a \& 1.b}
+
+\begin{table}[]
+\centering
+\begin{tabular}{l|ll|ll}
+                        & \multicolumn{2}{c|}{Time}                           & \multicolumn{2}{c|}{Traffic}                       \\
+\multicolumn{1}{c|}{Op} & \multicolumn{1}{c}{MSI} & \multicolumn{1}{c|}{MESI} & \multicolumn{1}{c}{MSI} & \multicolumn{1}{c}{MESI} \\ \hline
+R1/X                    & 40                      & 40                        & 6+32                    & 6+32                     \\
+W1/X                    & 10                      & 10                        & 10                      & 10                       \\
+W1/X                    & 1                       & 1                         & 0                       & 0                        \\
+R2/X                    & 40                      & 40                        & 6+32                    & 6+32                     \\
+W2/X                    & 10                      & 10                        & 10                      & 10                       \\
+W2/X                    & 1                       & 1                         & 0                       & 0                        \\
+R3/X                    & 40                      & 40                        & 6+32                    & 6+32                     \\
+W3/X                    & 10                      & 10                        & 10                      & 10                       \\
+W3/X                    & 1                       & 1                         & 0                       & 0                        \\
+R4/X                    & 40                      & 40                        & 6+32                    & 6+32                     \\
+W4/X                    & 10                      & 10                        & 10                      & 10                       \\
+W4/X                    & 1                       & 1                         & 0                       & 0                        \\ \hline
+Total                   & 204                     & 204                       & 192                     & 192
+\end{tabular}
+\caption{The number of clock cycles used for each command as well as the traffic generated, shown both under MSI and MESI.}
+\label{tab:t1ab}
+\end{table}
