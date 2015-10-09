@@ -1,3 +1,36 @@
 \section{Task 3}
 \subsection{Task 3.a}
+% Classify the misses with respect to cold, replacement, true sharing, and false sharing misses.
+% Cold = Block was never referenced before
+% Replacement = Block was evicted earlier because the cache was full or because another block mapped to that cache line.
+% True sharing = Two procesors access same word in a block, one gets a miss/invalidated from other.
+% False sharing = Tw oprocessors access different words in same block, one still gets invalidated from other.
+
+% Example at slide 58 in L6.
+
+The values $A$, $B$ and $C$ recide in block $B1$ and $D$ reside in block $B2$,
+both blocks map to the same cache line. Table \ref{tab:t3a} shows the different
+operations and their respective misses.
+
+\begin{table}[]
+\centering
+\begin{tabular}{lllll}
+Time                   & P1    & P2    & P3                                    & Miss Type     \\ \hline
+\multicolumn{1}{l|}{1} & $R_A$ &       & \multicolumn{1}{l|}{}                 & Cold          \\
+\multicolumn{1}{l|}{2} &       & $R_B$ & \multicolumn{1}{l|}{}                 & Cold          \\
+\multicolumn{1}{l|}{3} &       &       & \multicolumn{1}{l|}{$R_C$}            & Cold          \\
+\multicolumn{1}{l|}{4} & $W_A$ &       & \multicolumn{1}{l|}{}                 &               \\
+\multicolumn{1}{l|}{5} &       &       & \multicolumn{1}{l|}{$R_D$ (evict B1)} & Cold          \\
+\multicolumn{1}{l|}{6} &       & $R_B$ & \multicolumn{1}{l|}{}                 & False-Sharing \\
+\multicolumn{1}{l|}{7} & $W_B$ &       & \multicolumn{1}{l|}{}                 & True-Sharing  \\
+\multicolumn{1}{l|}{8} &       &       & \multicolumn{1}{l|}{$R_C$ (evict B2)} & Replacement   \\
+\multicolumn{1}{l|}{9} &       & $R_B$ & \multicolumn{1}{l|}{}                 & True-Sharing
+\end{tabular}
+\caption{The different operations and their respective cache misses.}
+\label{tab:t3a}
+\end{table}
+
 \subsection{Task 3.b}
+% Which of the misses could be ignored and still guarantee that the execution is correct?
+The False-Sharing miss at time $6$ could be ignored and the execution would
+still be able to continue without problems.
