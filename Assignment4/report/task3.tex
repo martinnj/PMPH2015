@@ -14,17 +14,17 @@ operations and their respective misses.
 
 \begin{table}[]
 \centering
-\begin{tabular}{lllll}
+\begin{tabular}{ccccc}
 Time                   & P1    & P2    & P3                                    & Miss Type     \\ \hline
-\multicolumn{1}{l|}{1} & $R_A$ &       & \multicolumn{1}{l|}{}                 & Cold          \\
-\multicolumn{1}{l|}{2} &       & $R_B$ & \multicolumn{1}{l|}{}                 & Cold          \\
-\multicolumn{1}{l|}{3} &       &       & \multicolumn{1}{l|}{$R_C$}            & Cold          \\
-\multicolumn{1}{l|}{4} & $W_A$ &       & \multicolumn{1}{l|}{}                 &               \\
-\multicolumn{1}{l|}{5} &       &       & \multicolumn{1}{l|}{$R_D$ (evict B1)} & Cold          \\
-\multicolumn{1}{l|}{6} &       & $R_B$ & \multicolumn{1}{l|}{}                 & False-Sharing \\
-\multicolumn{1}{l|}{7} & $W_B$ &       & \multicolumn{1}{l|}{}                 & True-Sharing  \\
-\multicolumn{1}{l|}{8} &       &       & \multicolumn{1}{l|}{$R_C$ (evict B2)} & Replacement   \\
-\multicolumn{1}{l|}{9} &       & $R_B$ & \multicolumn{1}{l|}{}                 & True-Sharing
+\multicolumn{1}{c|}{1} & $R_A$ &       & \multicolumn{1}{l|}{}                 & Cold          \\
+\multicolumn{1}{c|}{2} &       & $R_B$ & \multicolumn{1}{l|}{}                 & Cold          \\
+\multicolumn{1}{c|}{3} &       &       & \multicolumn{1}{l|}{$R_C$}            & Cold          \\
+\multicolumn{1}{c|}{4} & $W_A$ &       & \multicolumn{1}{l|}{}                 &               \\
+\multicolumn{1}{c|}{5} &       &       & \multicolumn{1}{l|}{$R_D$ (evict B1)} & Cold          \\
+\multicolumn{1}{c|}{6} &       & $R_B$ & \multicolumn{1}{l|}{}                 & False-Sharing \\
+\multicolumn{1}{c|}{7} & $W_B$ &       & \multicolumn{1}{l|}{}                 & True-Sharing  \\
+\multicolumn{1}{c|}{8} &       &       & \multicolumn{1}{l|}{$R_C$ (evict B2)} & Replacement   \\
+\multicolumn{1}{c|}{9} &       & $R_B$ & \multicolumn{1}{l|}{}                 & True-Sharing
 \end{tabular}
 \caption{The different operations and their respective cache misses.}
 \label{tab:t3a}
