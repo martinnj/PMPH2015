@@ -10,7 +10,7 @@ operation is listed in Table \ref{tab:t1ab}.
                         & \multicolumn{2}{c|}{Time}                           & \multicolumn{2}{c|}{Traffic}                       \\
 \multicolumn{1}{c|}{Op} & \multicolumn{1}{c}{MSI} & \multicolumn{1}{c|}{MESI} & \multicolumn{1}{c}{MSI} & \multicolumn{1}{c}{MESI} \\ \hline
 R1/X                    & 40                      & 40                        & 6+32                    & 6+32                     \\
-W1/X                    & 10                      & 10                        & 10                      & 10                       \\
+W1/X                    & 10                      & 1                         & 10                      & 0                        \\
 W1/X                    & 1                       & 1                         & 0                       & 0                        \\
 R2/X                    & 40                      & 40                        & 6+32                    & 6+32                     \\
 W2/X                    & 10                      & 10                        & 10                      & 10                       \\
@@ -21,7 +21,7 @@ W3/X                    & 1                       & 1                         & 
 R4/X                    & 40                      & 40                        & 6+32                    & 6+32                     \\
 W4/X                    & 10                      & 10                        & 10                      & 10                       \\
 W4/X                    & 1                       & 1                         & 0                       & 0                        \\ \hline
-Total                   & 204                     & 204                       & 192                     & 192
+Total                   & 204                     & 195                       & 192                     & 182
 \end{tabular}
 \caption{The number of clock cycles used for each command as well as the traffic generated, shown both under MSI and MESI.}
 \label{tab:t1ab}

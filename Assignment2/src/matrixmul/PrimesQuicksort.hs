@@ -1,5 +1,6 @@
 import System.Environment -- access to arguments etc.
 import Data.Bits
+import Data.List
 import Debug.Trace
 
 import System.IO.Unsafe  -- be careful!
@@ -205,22 +206,41 @@ flatQuicksort ne sizes arr =
 -----------------------------------------------------
 
 segmSpecialFilter :: (a->Bool) -> [Int] -> [a] -> ([Int],[a])
-segmSpecialFilter cond sizes arr = let
-    segLengths = filter (\x -> x /= 0) sizes -- TODO: Can parFilter be used?
-    segments = splitter segLengths arr
-    (resArr, resSizes) = unzip $ map (parFilter cond) segments
-    res1 = reduce (++) [] resArr
-    res2 = reduce (++) [] resSizes
-    in (res2,res1)
-    where
-        -- Helper function to split list into segments.
-        splitter :: [Int] -> [a] -> [[a]]
-        splitter [l] xs = let
-            (l1, l2) = splitAt l xs
-            in [l1]
-        splitter (l:ls) xs = let
-            (l1, l2) = splitAt l xs
-            in l1 : (splitter ls l2)
+segmSpecialFilter cond sizes arr =
+    let n   = length arr
+        cs  = map cond arr
+        tfs = map (\f -> if f then 1
+                         else 0) cs
+
+        ffs = map (\f->if f then 0
+                            else 1) cs
+
+        isT = segmScanInc (+) 0 sizes tfs
+
+        isF = segmScanInc (+) 0 sizes ffs
+
+        acc_sizes = scanInc (+) 0 sizes
+
+        is = map (\s -> isT !! (s - 1)) acc_sizes
+        si  = segmScanInc (+) 0 sizes sizes
+
+        offsets = zipWith (-) acc_sizes si
+
+        inds = map (\ (c,i,o,iT,iF) -> if c then iT+o-1 else iF+i+o-1 )
+                    (zip5 cs is offsets isT isF)
+
+        tmp1 = map (\m -> iota m) sizes
+        iotas = map (+1) $ reduce (++) [] tmp1
+
+        flags = map (\(f,i,s,ri) -> if f > 0
+                                    then (if ri > 0
+                                          then ri
+                                          else f)
+                                    else (if (i-1) == ri
+                                          then s-ri
+                                          else 0)) (zip4 sizes iotas si is)
+
+    in  (flags, permute inds arr)
 
 -----------------------------------------------------
 --- ASSIGNMENT 1: implement sparse matrix-vector  ---
@@ -269,18 +289,13 @@ nestSparseMatVctMult mat x =
 
 flatSparseMatVctMult :: [Int] -> [(Int,Double)] -> [Double] -> [Double]
 flatSparseMatVctMult flags mat x =
-    let tot_num_elems = length flags
-        vct_len       = length x
-        row_ids = map ( \x -> x-1 ) $ scanInc (+) 0 flags -- = [0,0,1,1,1,2,2,2,3,3]
-        is = iota (tot_num_elems)
-        components = map ( \i -> (snd $ mat!!i) * (x!!(fst $ mat!!i)) ) is
-        comzipped = zip row_ids components
-        vis = iota (vct_len)
-
-        -- not flat from here :(
-        foo = map ( \i -> filter ( \(x,_) -> x == i ) comzipped ) vis
-        bar = map ( \x -> sum $ map (\y -> snd y) x ) foo
-    in  bar
+    let comps = map (\(a,b) -> b*(x!!a)) mat
+        sums = segmScanInc (+) 0 flags comps
+        end_flags = tail flags ++ [head flags] -- flags now marks ends of segments.
+        foo = zip end_flags sums
+        (vals, ff) = parFilter (\(a,b) -> a == 1) foo
+        (_, res) = unzip $ take (head ff) vals
+    in res
 
 ----------------------------------------
 --- MAIN                             ---

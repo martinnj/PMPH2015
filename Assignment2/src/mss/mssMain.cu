@@ -24,6 +24,7 @@ int gpuMss(int* h_start, unsigned long num_threads, unsigned int block_size) {
     cudaMalloc((void**)&d_mapped, mem_mapped_size);
 
     MssMapKernel<int, MyInt4><<<num_blocks, block_size >>> (d_start, d_mapped, num_threads);
+    cudaThreadSynchronize();
 
     MyInt4* d_scanned;
     cudaMalloc((void**)&d_scanned, mem_mapped_size);

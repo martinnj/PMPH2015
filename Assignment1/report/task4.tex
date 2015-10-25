@@ -56,7 +56,10 @@ The timing results for different array sizes are shown in Table \ref{tab:times}
 and shows that the CPU generally are only faster at very small array sizes.
 According to my measurements already between 100-200 elements, the GPU code runs
 faster than the sequential CPU code. Furthermore the increase in compute time
-rises a lot faster for the CPU code compared to the GPU version.
+rises a lot faster for the CPU code compared to the GPU version. The reason the
+GPU is so much faster as the number of iterations increase is because of it's
+ability to process 1024 different ``iterations'' of the sequential loop in
+parallel.
 
 Since the measurements are in microseconds on a time shared machine there was
 some inaccuracies, the values in Table \ref{tab:times} is the average of running

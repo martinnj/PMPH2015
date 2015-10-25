@@ -10,9 +10,9 @@ information about the segment resulting from joining the segments together.
     \begin{lstlisting}
     connect = p [lastx,firsty]
     newlss  = lssx `max` lssy `max` (if connect then lcsx+lisy else 0)
-    newlis  = lisx `max` (if connect then (tlx+lisy) else 0)
-    newlcs  = lcsy `max` (if connect then (tly+lcsx) else 0)
-    newok   = okx && oky
+    newlis  = lisx `max` (if (connect && okx) then (tlx+lisy) else 0)
+    newlcs  = lcsy `max` (if (connect && oky) then (tly+lcsx) else 0)
+    newok   = if connect then okx && oky else False
     \end{lstlisting}
     \caption{The code written for the second task of the assignment.}
     \label{fig:t2code}
@@ -26,19 +26,21 @@ information about the segment resulting from joining the segments together.
 
     \item[Line 2] Sets the length of the new longest satisfying segment in the
     joined list based on which value is larger: The LSS from list $x$, the LSS
-    fomr list $y$ and if the \texttt{connect} value from Line 1 is ``true'' then
+    from list $y$ and if the \texttt{connect} value from Line 1 is ``true'' then
     the length of the concluding segment of $x$ joined with the length of the
     initial segment of $y$.
 
     \item[Line 3] Sets the length of the longest satisfying initial segment for
     the joined list by selecting the maximum of either: Length of the initial
-    segment of list $x$ or if the \texttt{connect} value is true, it will take
-    the total length of $x$ plus the length of the initial segment of $y$.
+    segment of list $x$ or if the \texttt{connect} and \texttt{okx} is true, it
+    will take the total length of $x$ plus the length of the initial segment of
+    $y$.
 
     \item[Line 4] Sets the length of the longest satisfying concluding segment
     for the joined list. Uses same method as above, and the length values of
-    longest satisfying concluding segment for $y$ or if \texttt{connect} is set,
-    the total length of $y$ plus the length of the concluding segment of $x$.
+    longest satisfying concluding segment for $y$ or if \texttt{connect} and
+    \texttt{oky} is set, the total length of $y$ plus the length of the
+    concluding segment of $x$.
 
     \item[Line 5] Determines wether or not the joined segment is ok by doing an
     ``and'' on the ok status of $x$ and $y$.

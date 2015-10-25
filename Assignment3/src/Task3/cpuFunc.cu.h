@@ -42,7 +42,7 @@ void flatMatrixMultiply(T* A, T* B, T* C, int M, int N, int U) {
             for (int k = 0 ; k < U ; k++) { // Sequential loop
                 tmp = tmp + A[fmo(i,k,U)] * B[fmo(k,j,N)];
             }
-            C[fmo(i,j,U)] = tmp;
+            C[fmo(i,j,N)] = tmp;
         }
     }
 }
@@ -70,7 +70,7 @@ template<class T>
 bool flatMatrixCompare(T* A, T* B, int M, int N) {
     for (int i = 0 ; i < M ; i++) {
         for (int j = 0 ; j < N ; j++) {
-            if(A[i*M+j] != B[i*M+j]) {
+            if(A[i*N+j] != B[i*N+j]) {
                 //printf("Compare error at [%d,%d]:\nCPU: %.2f\nGPU: %.2f\n", i, j, A[i*M+j], B[i*M+j]);
                 return false;
             }

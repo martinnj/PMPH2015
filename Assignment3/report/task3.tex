@@ -17,15 +17,15 @@ The code for this task is found in the \textit{gpuFunc.cu.h} file, it contains
 the same convinience functions as earlier, but the kernel is now replaced with
 \texttt{flatNaiveMutliplyKernel}, which is a naive matrix multiplication kernel.
 
-\subsection{Task 3.d: Shared-Memory GPU Code}
+\subsection{Task 3.d: Tiled-Memory GPU Code}
 The code for this task is found in the \textit{gpuFunc.cu.h} file, the
 shared-memory kernel is implemented in the function
 \texttt{flatSharedMultiplyKernel}.
 
-\subsection{Runningtimes}
+\subsection{Execution Time}
 
 Table \ref{tab:task3time} shows the running times of the CPU code and the
-Shared-Memory GPU kernel. Time time is done for 1000 runs of each method and the
+Shared-Memory GPU kernel. Time time is done for 10 runs of each method and the
 time represents the average time for a single run. The times only cover the time
 spent in the calulation kernels, and does not cover the overhead for copying
 data to device memory.
@@ -33,20 +33,23 @@ data to device memory.
 \begin{table}
     \begin{tabular}{|r|r|r|r|}
         \hline
-        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{Naive GPU Time} & \textbf{Shared-Memory GPU Time}\\\hline
-        $10 \times  10$ & $  10\mu s$ & $8\mu s$ & $7\mu s$ \\
-        $20 \times  20$ & $  85\mu s$ & $8\mu s$ & $7\mu s$ \\
-        $30 \times  30$ & $ 272\mu s$ & $8\mu s$ & $7\mu s$ \\
-        $40 \times  40$ & $ 635\mu s$ & $8\mu s$ & $7\mu s$ \\
-        $50 \times  50$ & $1228\mu s$ & $8\mu s$ & $7\mu s$ \\
-        $60 \times  60$ & $2107\mu s$ & $8\mu s$ & $7\mu s$ \\\hline
+        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{Naive GPU Time} & \textbf{Tiled-Memory GPU Time}\\\hline
+        $(2\times 4)\times(4\times 3)$ & $>0\mu s$ & $38\mu s$ & $22\mu s$ \\
+        $(40\times 10)\times(10\times 8)$ & $33\mu s$ & $20\mu s$ & $17\mu s$ \\
+
+        $10 \times 10$ & $10\mu s$   & $17\mu s$  & $16\mu s$ \\
+        $20 \times 20$ & $86\mu s$   & $27\mu s$  & $16\mu s$ \\
+        $30 \times 30$ & $274\mu s$  & $73\mu s$  & $18\mu s$ \\
+        $40 \times 40$ & $637\mu s$  & $103\mu s$ & $20\mu s$ \\
+        $50 \times 50$ & $1229\mu s$ & $124\mu s$ & $20\mu s$ \\
+        $60 \times 60$ & $2109\mu s$ & $145\mu s$ & $21\mu s$ \\ \hline
 
     \end{tabular}
-    \caption{The running times for the CPU and GPU code as the average over 1000
+    \caption{The running times for the CPU and GPU code as the average over 10
     runs.}
     \label{tab:task3time}
 \end{table}
 
 Table \ref{tab:task3time} shows that the CPU based code starts out slower than
-both the GPU kernels, it also shows that the shared-memory kernel have a lower
-runtime than the naive kernel.
+both the GPU kernels, it also shows that the Tiled-memory kernel have a lower
+execution time than the naive kernel.

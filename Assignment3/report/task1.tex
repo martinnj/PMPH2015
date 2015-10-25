@@ -61,10 +61,10 @@ For this task additional code is implemented in \textit{task1.cu} and
     \end{itemize*}
 \end{itemize}
 
-\subsection{Running times}
+\subsection{Execution Time}
 
 Table \ref{tab:task1time} shows the running times of the CPU code and the
-Shared-Memory GPU kernel. Time time is done for 1000 runs of each method and the
+Shared-Memory GPU kernel. Time time is done for 10 runs of each method and the
 time represents the average time for a single run. The times only cover the time
 spent in the calulation kernels, and does not cover the overhead for copying
 data to device memory.
@@ -72,18 +72,21 @@ data to device memory.
 \begin{table}
     \begin{tabular}{|r|r|r|r|}
         \hline
-        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{Naive GPU Time} & \textbf{Shared-Memory GPU Time}\\\hline
-        $10 \times  10$ & $ <0\mu s$ & $ 7\mu s$ & $7\mu s$ \\
-        $50 \times  50$ & $  9\mu s$ & $ 8\mu s$ & $7\mu s$ \\
-        $100\times 100$ & $ 37\mu s$ & $ 9\mu s$ & $8\mu s$ \\
-        $250\times 250$ & $231\mu s$ & $11\mu s$ & $9\mu s$ \\\hline
+        \textbf{Matrix Dimensions} & \textbf{CPU Time} & \textbf{Naive GPU Time} & \textbf{Tiled-Memory GPU Time}\\\hline
+        $100 \times  50$  & $28 \mu s$  & $31 \mu s$ & $21 \mu s$ \\
+        $50 \times  100$  & $18 \mu s$  & $19 \mu s$ & $17 \mu s$ \\
+        $10 \times  10$   & $>0 \mu s$  & $16 \mu s$ & $15 \mu s$ \\
+        $100 \times  100$ & $37 \mu s$  & $19 \mu s$ & $17 \mu s$ \\
+        $200 \times  200$ & $163 \mu s$ & $33 \mu s$ & $26 \mu s$ \\
+        $300 \times  300$ & $349 \mu s$ & $57 \mu s$ & $46 \mu s$ \\
+        $1024\times 1025$ & $18303 ms$  & $272\mu s$ & $145\mu s$ \\\hline
 
     \end{tabular}
-    \caption{The running times for the CPU and GPU code as the average over 1000
+    \caption{The running times for the CPU and GPU code as the average over 10
     runs.}
     \label{tab:task1time}
 \end{table}
 
 Table \ref{tab:task1time} shows that the CPU based code while very fast for the
 first small entry is quickly overtaken by both GPU kernels. Among the GPU
-kernels the Shared-Memory is the fastest.
+kernels the Shared-Memory is the fastest from the beginning.

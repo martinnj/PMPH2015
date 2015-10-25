@@ -3,6 +3,46 @@
 
 #include <cuda_runtime.h>
 
+// Flat Matrix Offset
+__device__ int gpuFmo(int row, int col, int matrixWidth) {
+    return row * matrixWidth + col;
+}
+
+template<class T>
+__global__ void flatNaiveTask2Kernel(T* A, T* B, int M, int N) {
+    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= M) { return; }
+
+    T tmp = A[gpuFmo(i, 0, N)];
+    T accum = tmp * tmp;
+    B[gpuFmo(i, 0, N)] = accum;
+
+    for (int j = 1 ; j < N ; j++) {
+        T tmpA = A[gpuFmo(i, j, N)];
+        accum = sqrt(accum) + tmpA * tmpA;
+        B[gpuFmo(i, j, N)] = accum;
+    }
+}
+
+template<class T>
+__global__ void flatTransposedTask2Kernel(T* At, T* Bt, int M, int N) {
+    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= M) { return; }
+
+    T tmp = At[gpuFmo(0, i, M)];
+    T accum = tmp * tmp;
+    __syncthreads();
+    Bt[gpuFmo(0, i, M)] = accum;
+
+    for (int j = 1 ; j < N ; j++) {
+        __syncthreads();
+        T tmpA = At[gpuFmo(j, i, M)];
+        accum = sqrt(accum) + tmpA * tmpA;
+
+        __syncthreads();
+        Bt[gpuFmo(j, i, M)] = accum;
+    }
+}
 
 template<class T>
 __global__ void flatNaiveTransposeKernel(T* A, T* B, int M, int N) {
@@ -14,21 +54,6 @@ __global__ void flatNaiveTransposeKernel(T* A, T* B, int M, int N) {
 
 template<class T>
 __global__ void flatSharedTransposeKernel(T* A, T* B, int M, int N) {
-    // int m = blockIdx.x * blockDim.x + threadIdx.x;
-    // int n = blockIdx.y * blockDim.y + threadIdx.y;
-    // int tid = blockDim.x * threadIdx.y + threadIdx.x;
-    //
-    // __shared__ T s[1024]; // The blocks are 32x32 in size, so we ned enough memory for each of them to store something.
-    //
-    // if((m < M) && (n < N)) {
-    //     s[tid] = A[m*N+n];
-    //     __syncthreads();
-    //     B[n*M+m] = s[tid];
-    // } else {
-    //     // We need to sync up to the working threads or they might stall forever.
-    //     // Even if we do not want to do any work.
-    //     __syncthreads();
-    // }
     const int tile_size = 32;
     __shared__ T tile[tile_size][tile_size];
     int tidx = threadIdx.x;

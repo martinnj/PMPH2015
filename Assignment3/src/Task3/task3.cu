@@ -39,13 +39,13 @@ unsigned long int gpuNaiveMultiply(T* A, T* B, T* C, int M, int N, int U) {
     T* d_B = flatMatrixCudaMalloc<T>(U, N);
     T* d_C = flatMatrixCudaMalloc<T>(M, N);
 
-    flatMatrixHostToDevice<T>(d_A, A, M, N);
+    flatMatrixHostToDevice<T>(d_A, A, M, U);
     flatMatrixHostToDevice<T>(d_B, B, U, N);
 
     dim3 threadsPerBlock(BLOCK_WIDTH, BLOCK_HEIGHT);
     int blocks_X = ceil(M/(float)threadsPerBlock.x);
     int blocks_Y = ceil(N/(float)threadsPerBlock.y);
-    dim3 numBlocks(blocks_X, blocks_Y);
+    dim3 numBlocks(blocks_Y, blocks_X);
 
     //printf("numBlocks(%d, %d);\n",blocks_X, blocks_Y);
 
@@ -53,6 +53,7 @@ unsigned long int gpuNaiveMultiply(T* A, T* B, T* C, int M, int N, int U) {
     struct timeval t_start, t_end, t_diff;
     gettimeofday(&t_start, NULL);
     flatNaiveMutliplyKernel<T> <<<numBlocks , threadsPerBlock>>>(d_A, d_B, d_C, M, N, U);
+    cudaThreadSynchronize();
     gettimeofday(&t_end, NULL);
     timeval_subtract(&t_diff, &t_end, &t_start);
 
@@ -72,13 +73,13 @@ unsigned long int gpuSharedMultiply(T* A, T* B, T* C, int M, int N, int U) {
     T* d_B = flatMatrixCudaMalloc<T>(U, N);
     T* d_C = flatMatrixCudaMalloc<T>(M, N);
 
-    flatMatrixHostToDevice<T>(d_A, A, M, N);
+    flatMatrixHostToDevice<T>(d_A, A, M, U);
     flatMatrixHostToDevice<T>(d_B, B, U, N);
 
     dim3 threadsPerBlock(BLOCK_WIDTH, BLOCK_HEIGHT);
     int blocks_X = ceil(M/(float)threadsPerBlock.x);
     int blocks_Y = ceil(N/(float)threadsPerBlock.y);
-    dim3 numBlocks(blocks_X, blocks_Y);
+    dim3 numBlocks(blocks_Y, blocks_X);
 
     //printf("numBlocks(%d, %d);\n",blocks_X, blocks_Y);
 
@@ -86,6 +87,7 @@ unsigned long int gpuSharedMultiply(T* A, T* B, T* C, int M, int N, int U) {
     struct timeval t_start, t_end, t_diff;
     gettimeofday(&t_start, NULL);
     flatSharedMultiplyKernel<T> <<<numBlocks , threadsPerBlock>>>(d_A, d_B, d_C, M, N, U);
+    cudaThreadSynchronize();
     gettimeofday(&t_end, NULL);
     timeval_subtract(&t_diff, &t_end, &t_start);
 
@@ -122,10 +124,6 @@ void allMultiplyTest(int iterations, int M, int N, int U) {
     float* cpu_B = flatMatrixCreate<float>(U,N, 0.0);
     float* gpu1_B = flatMatrixCreate<float>(U,N, 0.0);
     float* gpu2_B = flatMatrixCreate<float>(U,N, 0.0);
-
-    float* cpu_C = flatMatrixCreate<float>(M,N, 0.0);
-    float* gpu1_C = flatMatrixCreate<float>(M,N, 0.0);
-    float* gpu2_C = flatMatrixCreate<float>(M,N, 0.0);
 
     for(int i = 0 ; i < M*U ; i++) {
         cpu_A[i] = i + 1.0;
@@ -200,12 +198,15 @@ void allMultiplyTest(int iterations, int M, int N, int U) {
 int main(int argc, char** argv) {
 
 
-    allMultiplyTest(1000, 10, 10, 10);
-    allMultiplyTest(1000, 20, 20, 20);
-    allMultiplyTest(1000, 30, 30, 30);
-    allMultiplyTest(1000, 40, 40, 40);
-    allMultiplyTest(1000, 50, 50, 50);
-    allMultiplyTest(1000, 60, 60, 60);
+    allMultiplyTest(10, 2, 3, 4);
+    allMultiplyTest(10, 40, 8, 10);
+
+    allMultiplyTest(10, 10, 10, 10);
+    allMultiplyTest(10, 20, 20, 20);
+    allMultiplyTest(10, 30, 30, 30);
+    allMultiplyTest(10, 40, 40, 40);
+    allMultiplyTest(10, 50, 50, 50);
+    allMultiplyTest(10, 60, 60, 60);
 
     return 0;
 }

@@ -2,38 +2,65 @@
 % Given a n-by-n tori and an n-dimensional hypercube decide things for node
 % count 4, 16, 64, 256
 
+% N   | tori n | cube k
+% 4       2        2
+% 16      4        4
+% 64      8        6
+% 256    16        8
 \subsection{Task 6.a}
 % At what scale does the hypercube provide (strictly) higher bisection width than the torus?
 
-Table \ref{tab:t6a} shows the bisection width of each network at the given
-sizes, the width of the hyper-cube have a strictly greater width at $n=16$ and
-higher.
+Table \ref{tab:task6a1} shows the different dimensions of the two patterns for
+the specified networks sizes, this is used to calculate the bisection widths
+which can be seen in Table \ref{tab:task6a2}. We can see that at $N=64$ the
+hypercube provides a strictly greater bisection width.
 
-\begin{table}[]
-\centering
-\begin{tabular}{l|ll}
-        & Tori  & HyperCube                   \\ \hline
-Formula & $2n$  & $2^{n-1}$                   \\
-$n=4$   & $8$   & $8$                         \\
-$n=16$  & $32$  & $32768$                     \\
-$n=64$  & $128$ & $9.223372037\times 10^{18}$ \\
-$n=256$ & $516$ & $5.789604462\times 10^{76}$
-\end{tabular}
-\caption{The bisection width of the two networks at given sizes.}
-\label{tab:t6a}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|r|r|r|}
+        \hline
+        $N$ & Tori $n$ & Cube $k$ \\\hline
+          4 &  2       & 2        \\
+         16 &  4       & 4        \\
+         64 &  8       & 6        \\
+        256 & 16       & 8        \\\hline
+    \end{tabular}
+    \caption{The different variables needed for calculating the dimensions of
+        the two patterns.}
+    \label{tab:task6a1}
 \end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        $N$     & Tori & HyperCube \\ \hline
+        Formula & $2n$ & $2^{k-1}$ \\
+        4       &  4   &   2       \\
+        16      &  8   &   8       \\
+        64      & 16   &  32       \\
+        256     & 32   & 128       \\ \hline
+    \end{tabular}
+    \caption{My caption}
+    \label{tab:task6a2}
+\end{table}
+
 
 \subsection{Task 6.b}
 % Determine the network diameter and the switch degree for the scale at which the hypercube
 % provides a higher bisection width than the torus.
 
-% Scale: n=16.
-% Network Diameter: 16 for both.
-% Switch degree: 4 for tori 16 for hyper-cube.
+% Scale: N=64.
+% n/k = 8/6
+% Network Diameter: 8/6
+% Switch degree: 4/6
 
-Using the formulas from \cite[slide 38]{l7Interconnect} for scale $n=16$, the
-network diameter is $16$ for both the tori and the hyper-cube. The switch degree
-is 4 for the tori and 16 for the hyper-cube.
+Using the formulas from \cite[slide 38]{l7Interconnect} for scale $N=64$ as
+calculated in the previus sub task, we have a $8$-by-$8$ tori and a
+$6$-dimensional hypercube, so we have $n=8$ and $k=6$. This gives the tori a
+network diameter of $8$ and the hypercube a network diameter of $6$. The switch
+degree for the tori is $4$ regardless of the size of the tori, and for the
+hypercube it is $6$.
 
 \subsection{Task 6.c}
 % What can you say about the relative merits of the two topologies?

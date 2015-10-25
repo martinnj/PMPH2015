@@ -44,6 +44,65 @@ for i from 0 to N-1 // outer loop
 
 \end{itemize}
 
+\subsection{Task 2.b OpenMP Code}
+The code for this can be found in \textit{src/task2openMP.cpp} and
+\textit{src/cpuFunc.cu.h}. It can be built from the makefile using the
+texttt{make bonus} command/target. It can then be run by running the
+\textit{task2openMP} file. Execution times for different matrix sizes can be
+seen in Table \ref{tab:task2times} along with execution times for the following
+tasks.
 
-\subsection{Task 2.c}
-\subsection{Task 2.d}
+\subsection{Task 2.c Naive GPU Code}
+The code for this task can be found in \textit{src/task2.cu},
+\textit{src/cpuFunc.cu.h}, \textit{src/gpuFunc.cu.h}. The kernel that is used
+for this task is \texttt{flatNaiveTask2Kernel}. Execution times for different
+matrix sizes can be seen in Table \ref{tab:task2times} along with execution
+times for the following tasks.
+
+
+\subsection{Task 2.d Transposed GPU Code}
+The code for this task can be found in \textit{src/task2.cu},
+\textit{src/cpuFunc.cu.h}, \textit{src/gpuFunc.cu.h}. The kernel that is used
+for this task is \texttt{flatTransposedTask2Kernel}. It also uses the
+\texttt{flatSharedTransposeKernel} from Task 1. Execution times for different
+matrix sizes can be seen in Table \ref{tab:task2times} along with execution
+times for the following tasks.
+
+
+
+\subsection{Execution Time}
+All running times were taken over 100 repetitions of each matrix size for each
+different method. All the times we're taken running on one of the servers we
+were given access to as part of the course.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|r|r|r|r|r|}
+\hline
+\textbf{Dimensions} & \textbf{CPU} & \textbf{CPU OpenMP} & \textbf{GPU Naive} & \textbf{GPU Transposed} \\ \hline
+$10 \times 64$      & $12\mu s$    & $185\mu s$          & $51\mu s$          & $69\mu s$               \\
+$20 \times 64$      & $23\mu s$    & $11\mu s$           & $67\mu s$          & $68\mu s$               \\
+$30 \times 64$      & $34\mu s$    & $11\mu s$           & $85\mu s$          & $70\mu s$               \\
+$40 \times 64$      & $45\mu s$    & $12\mu s$           & $88\mu s$          & $68\mu s$               \\
+$50 \times 64$      & $57\mu s$    & $12\mu s$           & $87\mu s$          & $70\mu s$               \\
+$60 \times 64$      & $68\mu s$    & $12\mu s$           & $89\mu s$          & $70\mu s$               \\
+$70 \times 64$      & $80\mu s$    & $13\mu s$           & $88\mu s$          & $74\mu s$               \\
+$80 \times 64$      & $91\mu s$    & $13\mu s$           & $89\mu s$          & $69\mu s$               \\
+$90 \times 64$      & $102\mu s$   & $13\mu s$           & $88\mu s$          & $71\mu s$               \\
+$100 \times 64$     & $114\mu s$   & $14\mu s$           & $88\mu s$          & $74\mu s$               \\
+$2000 \times 64$    & $2277\mu s$  & $106\mu s$          & $166\mu s$         & $129\mu s$              \\
+$3000 \times 64$    & $3402\mu s$  & $135\mu s$          & $188\mu s$         & $166\mu s$              \\
+$4000 \times 64$    & $4555\mu s$  & $179\mu s$          & $210\mu s$         & $200\mu s$              \\
+$5000 \times 64$    & $5687\mu s$  & $222\mu s$          & $143\mu s$         & $145\mu s$              \\
+$10000 \times 64$   & $11373\mu s$ & $436\mu s$          & $382\mu s$         & $216\mu s$              \\ \hline
+\end{tabular}
+\caption{This table shows the execution times for different implementations of
+    the algorithm in this task. Each time is the average over 100 runs.}
+\label{tab:task2times}
+\end{table}
+
+The first reading for the openMP solution is off, I have tried to re do the
+reading several times and also increase the number of repetitions in order to
+try and eliminate delays caused by a cold cache, but the reading is persistent.
+This leads me to conclude that the overhead for creating the openMP threads are
+much higher than the time saved by parallelising for a matrix with only 10 rows.
